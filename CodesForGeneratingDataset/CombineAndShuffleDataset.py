@@ -18,4 +18,4 @@ def combine_and_shuffle_datasets(input_file_1, input_file_2, output_combined):
     print(f"Combined and shuffled dataset saved to {output_combined}.")
 
 # Example usage
-combine_and_shuffle_datasets(".\To_Combine\Test_AbnormalLogs_Modified.csv", ".\AnomalyAddedGeneration\Test_AbnormalRows.csv", ".\Final\Test_Final.csv")
+combine_and_shuffle_datasets(".\Seperated_Anomalies-LabeledDatasets\Test_NormalRows.csv", ".\Seperated_Anomalies-LabeledDatasets\Test_AbnormalRows.csv", ".\Final\Test_Labeled.csv")
