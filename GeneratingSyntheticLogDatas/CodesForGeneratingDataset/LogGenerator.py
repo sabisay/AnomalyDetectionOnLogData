@@ -5,7 +5,7 @@ import random
 
 # Sabitler
 NUM_RECORDS = 100000
-NUM_USERS = 500  # Personel sayısı
+NUM_USERS = 200  # Personel sayısı
 NUM_PATIENTS = 20000  # Hasta sayısı
 NUM_DEPARTMENTS = 10  # Departman sayısı
 NUM_DEVICES = 200  # Cihaz sayısı
@@ -23,11 +23,11 @@ user_departments = {f"USR_{str(user_id).zfill(3)}": random.randint(1, NUM_DEPART
 # Kullanıcı rollerini özel dağılımla belirleme
 user_roles = {}
 user_distribution = {
-    "Doctor": 100,
-    "Nurse": 150,
-    "Secretary": 100,
-    "Admin": 75,
-    "Researcher": 75
+    "Doctor": 50,
+    "Nurse": 80,
+    "Secretary": 30,
+    "Admin": 10,
+    "Researcher": 30
 }
 user_id_counter = 1
 for role, count in user_distribution.items():
@@ -58,18 +58,17 @@ for i in range(NUM_RECORDS):
     timestamp = start_time + timedelta(days=random_day, hours=random_hour - 9, minutes=random_minute, seconds=random_second)
     
     access_level = np.random.choice(ACCESS_LEVELS, p=[0.7, 0.15, 0.1, 0.05])
-    access_duration = np.random.randint(60, 300)  # 60 saniye - 300 saniye arası
+    access_duration = np.random.randint(120, 300)  # 120 saniye - 300 saniye arası
     device_id = f"DVC_{str(random.randint(1, NUM_DEVICES)).zfill(3)}"
     patient_id = f"PTN_{str(random.randint(1, NUM_PATIENTS)).zfill(5)}"
     visit_department = f"DPT_{str(patient_departments[patient_id]).zfill(3)}"
     
-    connection = np.random.choice(["VPN", "OnSite"], p= [0.05, 0.95])
+    connection = "OnSite"
     is_access_fail = np.random.choice([0, 1], p=[0.98, 0.02])  # Başarısız erişimler %2 ihtimalle
     is_sensitive = np.random.choice([0, 1], p=[0.8, 0.2])  # Hassas veri erişimi %20 ihtimalle
     
-    # Çoğunlukla hastanın ziyaret ettiği departmandaki personel erişmeli
-    if random.random() < 0.90:
-        department_id = visit_department
+    # Her zaman hastanın ziyaret ettiği departmandaki personel erişmeli
+    department_id = visit_department
     
     records.append([log_id, user_id, department_id, role, connection, timestamp, access_level, access_duration, device_id, 
                     patient_id, is_access_fail, is_sensitive, visit_department])
@@ -79,5 +78,5 @@ df = pd.DataFrame(records, columns=["ID", "UserID", "Department", "UserRole", "C
                                     "AccessDuration", "DeviceID", "PatientID", "IsAccessFail", "IsSensitive", "VisitDepartment"])
 
 # CSV'ye kaydetme
-df.to_csv(r"./FirstGeneration/hospital_access_logs.csv", index=False)
+df.to_csv(r"./GeneratingSyntheticLogDatas/SecondTry/hospital_access_logs.csv", index=False)
 print("Sentetik hastane erişim verisi oluşturuldu ve kaydedildi!")

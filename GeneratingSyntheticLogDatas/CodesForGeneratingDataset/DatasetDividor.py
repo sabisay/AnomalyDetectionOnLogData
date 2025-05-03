@@ -21,4 +21,4 @@ def datasetDividor(input_file, n, output_selected, output_remaining):
     print(f"Extracted {n} lines to {output_selected} and saved remaining lines to {output_remaining}.")
 
 # Example usage
-datasetDividor(r"./FirstGeneration/CV_Test_Combine.csv", 20000, r"./FirstGeneration/Test.csv", r"./FirstGeneration/CV.csv")
+datasetDividor(r"./GeneratingSyntheticLogDatas/SecondTry/Final/Test.csv", 200, r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_Abnormal.csv", r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_Normal.csv")
