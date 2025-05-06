@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 import random
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-anomaly_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_SameTimestempSamePatientAnomaly.csv"
-anomalous_users_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
+input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+anomaly_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AbnormalTimestamp.csv"
+anomalous_users_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
 
 # Veriyi oku
 df = pd.read_csv(input_path)
@@ -46,7 +46,7 @@ valid_day_users = list(set(day_users) - existing_anomalous_users)
 if len(valid_night_users) < 1 or len(valid_day_users) < 2:
     raise ValueError("Yeterli sayıda uygun gece/gündüz kullanıcısı yok.")
 
-selected_night = np.random.choice(valid_night_users, 1, replace=False)[0]
+selected_night = np.random.choice(valid_night_users, 2, replace=False)[0]
 selected_days = np.random.choice(valid_day_users, 2, replace=False)
 
 anomalous_indices = []

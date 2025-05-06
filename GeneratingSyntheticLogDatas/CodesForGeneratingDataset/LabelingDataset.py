@@ -1,15 +1,16 @@
 import pandas as pd
 
 # Ana veri dosyası
-cv_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test.csv"
-output_labeled_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_Labeled.csv"
+cv_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
+output_labeled_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_Labeled.csv"
 
 # Anomali dosyaları
 anomaly_files = [
-    r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_AbnormalAccessDuration.csv",
-    r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_DuplicateTimestempAnomaly.csv",
-    r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_VPNAccessAnomaly.csv",
-    r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_SameTimestempSamePatientAnomaly.csv",
+    r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AbnormalAccessDuration.csv",
+    r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_DuplicateTimestempAnomaly.csv",
+    r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_VPNAccessAnomaly.csv",
+    r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_SameTimestempSamePatientAnomaly.csv",
+    r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AbnormalTimestamp.csv",
 ]
 
 # Ana veriyi yükle

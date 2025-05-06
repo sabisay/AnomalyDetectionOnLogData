@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_DuplicateTimestempAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
+input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
+output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
+anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_DuplicateTimestempAnomaly.csv"
+user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)

@@ -3,9 +3,9 @@ import numpy as np
 import os
 
 # Ayarlanabilir dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AbnormalAccessDuration.csv"
+input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
+output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
+anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AbnormalAccessDuration.csv"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -49,7 +49,7 @@ print(df.loc[anomalous_indices, "ID"].tolist())
 
 # --- Anomalous UserID'leri kayıt altına al ---
 anomalous_user_ids = df.loc[anomalous_indices, "UserID"].unique()
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
+user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
 
 # Varsa mevcut kullanıcıları oku
 if os.path.exists(user_tracking_path):
