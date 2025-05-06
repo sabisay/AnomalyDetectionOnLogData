@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test.csv"
-output_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_SameTimestempSamePatientAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_AnomalousUsers.txt"
+input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_SameTimestempSamePatientAnomaly.csv"
+user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -28,11 +28,11 @@ eligible_users = (
     .tolist()
 )
 
-if len(eligible_users) < 3:
+if len(eligible_users) < 2:
     raise ValueError("Anomali için yeterli sayıda yeni kullanıcı yok.")
 
 # 3 kullanıcı seç
-selected_users = np.random.choice(eligible_users, 3, replace=False)
+selected_users = np.random.choice(eligible_users, 2, replace=False)
 
 # Ortak timestamp ve ortak patient seçimi için rastgele bir timestamp ve patient seç
 reference_row = df.sample(1).iloc[0]
@@ -44,7 +44,7 @@ anomalous_indices = []
 
 for user in selected_users:
     user_logs = df[df["UserID"] == user]
-    n_anomalies = int(len(user_logs) * 0.4)
+    n_anomalies = int(len(user_logs) * 0.2)
     sampled = user_logs.sample(n=n_anomalies, random_state=42)
     indices = sampled.index
 

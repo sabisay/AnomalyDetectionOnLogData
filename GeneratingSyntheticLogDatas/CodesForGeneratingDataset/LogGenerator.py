@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 
 # Sabitler
-NUM_RECORDS = 100000
+NUM_RECORDS = 120000
 NUM_USERS = 200  # Personel sayısı
 NUM_PATIENTS = 20000  # Hasta sayısı
 NUM_DEPARTMENTS = 10  # Departman sayısı
@@ -78,5 +78,5 @@ df = pd.DataFrame(records, columns=["ID", "UserID", "Department", "UserRole", "C
                                     "AccessDuration", "DeviceID", "PatientID", "IsAccessFail", "IsSensitive", "VisitDepartment"])
 
 # CSV'ye kaydetme
-df.to_csv(r"./GeneratingSyntheticLogDatas/SecondTry/hospital_access_logs.csv", index=False)
+df.to_csv(r"./GeneratingSyntheticLogDatas/TrdTry/hospital_access_logs.csv", index=False)
 print("Sentetik hastane erişim verisi oluşturuldu ve kaydedildi!")

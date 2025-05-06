@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test.csv"
-output_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_VPNAccessAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/SecondTry/Test/Test_AnomalousUsers.txt"
+input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
+anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_VPNAccessAnomaly.csv"
+user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -29,7 +29,7 @@ onsite_users = (
 eligible_users = [uid for uid in onsite_users if uid not in used_user_ids]
 
 # Rastgele 3 kullanıcı seç
-if len(eligible_users) < 3:
+if len(eligible_users) < 2:
     selected_users = eligible_users  # yetersiz kullanıcı varsa hepsini al
 else:
     selected_users = np.random.choice(eligible_users, 2, replace=False)
