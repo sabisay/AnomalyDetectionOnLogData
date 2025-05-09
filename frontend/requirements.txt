@@ -1,0 +1,8 @@
+streamlit
+pandas
+matplotlib
+plotly
+openpyxl
+requests
+jinja2
+weasyprint
