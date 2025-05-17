@@ -10,3 +10,13 @@ Bu klasörde projenin local geliştirme ortamı için kullanılan örnek NGINX c
    ```bash
    cd C:\nginx
    nginx
+
+
+NOT:
+
+NGINX'i kapatmak için:
+nginx -s stop
+
+Config değiştiğinde yeniden yüklemek için:
+nginx -s reload
+
