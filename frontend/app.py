@@ -82,6 +82,3 @@ elif user_info:
             st.dataframe(df.head())
     else:
         st.info("Lütfen bir veri dosyası yükleyin.")
-
-    if role == "admin":
-        st.markdown("🛠️ **Kullanıcı yönetimi** bölümü buraya eklenebilir.")
