@@ -19,27 +19,11 @@ def get_data(file_path, csv_output_path=None):
 
     return df
 
-def set_dataset(Train, Validation, Test):
-    df_train = pd.read_csv(Train)
-    df_cv = pd.read_csv(Validation)
+def set_dataset(Test):
     df_test = pd.read_csv(Test)
-    print("Datasets saved.")
+    print("Dataset saved.")
     
-    return df_train, df_cv, df_test
-    
-def combine_dataset(df_train, df_cv, df_test):
-    df_train = df_train.copy()
-    df_cv = df_cv.copy()
-    df_test = df_test.copy()
-    
-    df_train['source'] = 'train'
-    df_cv['source'] = 'cv'
-    df_test['source'] = 'test'
-    
-    df_all = pd.concat([df_train, df_cv, df_test], ignore_index=True)
-    print("Combination Completed")
-    return df_all
-
+    return df_test
 
 def convert_to_numeric(df):
     # UserID
@@ -94,17 +78,10 @@ def convert_to_numeric(df):
         
     return df
 
-def seperate_dataset(df_all):
-    df_train = df_all[df_all['source'] == 'train'].reset_index(drop=True)
-    df_cv = df_all[df_all['source'] == 'cv'].reset_index(drop=True)
-    df_test = df_all[df_all['source'] == 'test'].reset_index(drop=True)
-    print("Seperation Completed")
-    return df_train, df_cv, df_test
-
 def save_dataset(df, name):
     df.to_csv(name, index=False)
     
-def process_all(train_path, cv_path, test_path, output_folder="ModularizedClasses/ForTraining/outputs/"):
+def process_all(test_path, output_folder="ModularizedClasses/ForDetecting/outputs/"):
     """
     Runs the entire data processing pipeline with a single function call:
     1. Loads datasets from CSV or Excel files
@@ -113,38 +90,24 @@ def process_all(train_path, cv_path, test_path, output_folder="ModularizedClasse
     4. Optionally separates and saves processed datasets as CSV files
 
     Args:
-        train_path (str): Path to the train dataset file (CSV or XLSX)
-        cv_path (str): Path to the validation dataset file (CSV or XLSX)
         test_path (str): Path to the test dataset file (CSV or XLSX)
-        output_folder (str): Folder to save the processed CSV files (default: './outputs/')
+        output_folder (str): Folder to save the processed CSV files (default: 'outputs/')
 
     Returns:
-        tuple: (df_train_new, df_cv_new, df_test_new, df_all)
+        dataframe: (df_test_new)
     """
     # Step 1: Load and convert each dataset to CSV format if needed
-    df_train = get_data(train_path)
-    df_cv = get_data(cv_path)
     df_test = get_data(test_path)
     
-    # Step 2: Combine all datasets and add a 'source' column
-    df_all = combine_dataset(df_train, df_cv, df_test)
-    
-    # Step 3: Convert categorical/string columns to numeric/categorical
-    df_all = convert_to_numeric(df_all)
-    
-    # Step 4: Separate combined dataset back into individual sets (if needed)
-    df_train_new, df_cv_new, df_test_new = seperate_dataset(df_all)
+    # Step 2: Convert categorical/string columns to numeric/categorical
+    df_test = convert_to_numeric(df_test)
     
     # Step 5: Save all datasets as CSV files (create folder if it doesn't exist)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    
-    save_dataset(df_train_new, os.path.join(output_folder, "train_processed.csv"))
-    save_dataset(df_cv_new, os.path.join(output_folder, "cv_processed.csv"))
-    save_dataset(df_test_new, os.path.join(output_folder, "test_processed.csv"))
-    save_dataset(df_all, os.path.join(output_folder, "all_combined.csv"))
+    save_dataset(df_test, os.path.join(output_folder, "test_processed.csv"))
 
     print("✅ All operations completed successfully. Processed files have been saved.")
 
     # Optionally return all processed DataFrames
-    return df_train_new, df_cv_new, df_test_new, df_all
+    return df_test
