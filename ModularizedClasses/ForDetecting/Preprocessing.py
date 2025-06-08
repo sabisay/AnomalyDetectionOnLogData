@@ -102,10 +102,11 @@ def process_all(test_path, output_folder="ModularizedClasses/ForDetecting/output
     # Step 2: Convert categorical/string columns to numeric/categorical
     df_test = convert_to_numeric(df_test)
     
-    # Step 5: Save all datasets as CSV files (create folder if it doesn't exist)
+    # Step 5: Save the processed dataset as a CSV file with its original name
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    save_dataset(df_test, os.path.join(output_folder, "test_processed.csv"))
+    base_name = os.path.splitext(os.path.basename(test_path))[0]
+    save_dataset(df_test, os.path.join(output_folder, f"{base_name}_processed.csv"))
 
     print("✅ All operations completed successfully. Processed files have been saved.")
 
