@@ -104,7 +104,7 @@ def seperate_dataset(df_all):
 def save_dataset(df, name):
     df.to_csv(name, index=False)
     
-def process_all(train_path, cv_path, test_path, output_folder="ModularizedClasses/ForTraining/outputs/"):
+def preprocess(train_path, cv_path, test_path, output_folder="ModularizedClasses/ForTraining/outputs/"):
     """
     Runs the entire data processing pipeline with a single function call:
     1. Loads datasets from CSV or Excel files
@@ -142,9 +142,8 @@ def process_all(train_path, cv_path, test_path, output_folder="ModularizedClasse
     save_dataset(df_train_new, os.path.join(output_folder, "train_processed.csv"))
     save_dataset(df_cv_new, os.path.join(output_folder, "cv_processed.csv"))
     save_dataset(df_test_new, os.path.join(output_folder, "test_processed.csv"))
-    save_dataset(df_all, os.path.join(output_folder, "all_combined.csv"))
 
-    print("✅ All operations completed successfully. Processed files have been saved.")
+    print(f"✅ All operations completed successfully. Processed files have been saved in: {output_folder}")
 
     # Optionally return all processed DataFrames
     return df_train_new, df_cv_new, df_test_new, df_all

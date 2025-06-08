@@ -1,0 +1,117 @@
+import pandas as pd
+import os
+
+from sklearn.preprocessing import StandardScaler
+
+InputFolder = "ModularizedClasses/ForDetecting/outputs/"
+OutputPath = "ModularizedClasses/ForDetecting/behaviours/"
+
+def load_datasets(input_folder):
+    # List all CSV files in the input folder
+    csv_files = [f for f in os.listdir(input_folder) if f.endswith(".csv")]
+    
+    # Read all CSV files into a dictionary
+    datasets = {f: pd.read_csv(os.path.join(input_folder, f)) for f in csv_files}
+
+    # Check the number of datasets and assign them accordingly
+    if len(datasets) != 1:
+        print(f"Error: Expected 3 datasets, but found {len(datasets)}")
+        return None
+    # Map datasets to corresponding names
+    return datasets
+
+
+def generate_user_behavior_vectors(df, timestamp_col="Timestamp", user_col="UserID"):
+
+    copy_df = df.copy()
+    
+    print(copy_df.columns.tolist())
+
+    # Parse timestamp and extract date/hour
+    copy_df[timestamp_col] = pd.to_datetime(df[timestamp_col])
+    copy_df["Date"] = copy_df[timestamp_col].dt.date
+    copy_df["Hour"] = copy_df[timestamp_col].dt.hour
+
+    # VPN / Onsite connection ratio
+    def vpn_ratio(x):
+        return (x == 0).mean()
+
+    # Classify night shift hours
+    copy_df["IsNight"] = copy_df["Hour"].apply(
+        lambda h: 1 if (h < 7 or h >= 20 or h == 0) else (0 if 9 <= h <= 17 else None)
+    )
+
+    # Calculate shift logic: balanced ratio between night and day usage
+    def calculate_shift_logic(group):
+        total_logs = len(group)
+        night_logs = group["IsNight"].sum()
+        day_logs = total_logs - night_logs
+        night_ratio = night_logs / total_logs
+        day_ratio = day_logs / total_logs
+        return min(night_ratio, day_ratio)
+
+    # Group by user and date
+    grouped = copy_df.groupby([user_col, "Date"])
+
+    # Feature engineering (std_hour was removed)
+    session_vectors = grouped.agg(
+        total_logs=("ID", "count"),
+        mean_duration=("AccessDuration", "mean"),
+        fail_ratio=("IsAccessFail", "mean"),
+        sensitive_ratio=("IsSensitive", "mean"),
+        vpn_ratio=("Connection", vpn_ratio),
+        unique_patient_count=("PatientID", pd.Series.nunique),
+        unique_device_count=("DeviceID", pd.Series.nunique),
+        shift_logic=("IsNight", lambda x: calculate_shift_logic(
+            x.to_frame().join(copy_df.loc[x.index, ["Hour"]])
+        ))
+    ).fillna(0).reset_index()
+
+    return session_vectors
+
+
+def return_scaled_matrix(test):
+    # Get feature names 
+    feature_names = [ 'total_logs', 'mean_duration', 'fail_ratio', 'sensitive_ratio',
+    'vpn_ratio', 'unique_patient_count', 'unique_device_count', 'shift_logic']
+    
+    # Drop identifiers before scaling
+    X_test = test.drop(columns=["UserID", "Date"])
+    X_test = X_test[feature_names]  # Ensure consistent column order
+    
+    # Use standard scaler to scale each dataset, fit only on training data
+    scaler = StandardScaler()
+    X_test_scaled = scaler.fit_transform(X_test)
+    
+    # Return DataFrame with column names
+    return pd.DataFrame(X_test_scaled, columns=feature_names)
+
+
+def behaviour_analysis(input_folder, output_path):
+    """
+    Performs the complete user behavior analysis:
+    - Loads raw CSV datasets
+    - Generates daily user behavior vectors
+    - Scales the features
+    - Saves the processed data to output path
+    """
+    
+    # Ensure output directory exists
+    os.makedirs(output_path, exist_ok=True)
+    
+    datasets = load_datasets(input_folder)
+    if datasets is None:
+        return
+       
+    # Get the first (and only) DataFrame from the datasets dictionary
+    test = next(iter(datasets.values()))
+    
+    print("\nProcessing DataFrame with columns:", test.columns.tolist())
+    df_test = generate_user_behavior_vectors(test)
+    
+    test_scaled = return_scaled_matrix(df_test)
+    
+    # Save processed data to CSV
+    test_scaled.to_csv(os.path.join(output_path, "test.csv"), index=False)
+    
+    print(f"\n✅ All datasets processed and saved successfully in: {output_path}")
