@@ -5,23 +5,23 @@ from sklearn.preprocessing import StandardScaler
 
 def load_datasets(input_folder):
     """
-    Load train, cv, and test datasets from the input folder.
+    Load train, cv, and test datasets from the input folder (parquet format).
     Returns tuple of (train, cv, test) DataFrames or None if error occurs.
     """
     try:
-        # Get all CSV files
-        csv_files = [f for f in os.listdir(input_folder) if f.endswith('.csv')]
+        # Get all Parquet files
+        parquet_files = [f for f in os.listdir(input_folder) if f.endswith('.parquet')]
         
-        if len(csv_files) != 3:
-            print(f"❌ Error: Expected 3 CSV files, found {len(csv_files)}")
+        if len(parquet_files) != 3:
+            print(f"❌ Error: Expected 3 Parquet files, found {len(parquet_files)}")
             return None
             
         # Initialize datasets
         train = cv = test = None
         
         # Read and identify datasets
-        for file in csv_files:
-            df = pd.read_csv(os.path.join(input_folder, file))
+        for file in parquet_files:
+            df = pd.read_parquet(os.path.join(input_folder, file))
             
             # Check if file has required column
             if 'source' not in df.columns:
@@ -50,24 +50,18 @@ def load_datasets(input_folder):
         return None
 
 def generate_user_behavior_vectors(df, timestamp_col="Timestamp", user_col="UserID"):
-
     copy_df = df.copy()
-
-    # Parse timestamp and extract date/hour
     copy_df[timestamp_col] = pd.to_datetime(df[timestamp_col])
     copy_df["Date"] = copy_df[timestamp_col].dt.date
     copy_df["Hour"] = copy_df[timestamp_col].dt.hour
 
-    # VPN / Onsite connection ratio
     def vpn_ratio(x):
         return (x == 0).mean()
 
-    # Classify night shift hours
     copy_df["IsNight"] = copy_df["Hour"].apply(
         lambda h: 1 if (h < 7 or h >= 20 or h == 0) else (0 if 9 <= h <= 17 else None)
     )
 
-    # Calculate shift logic: balanced ratio between night and day usage
     def calculate_shift_logic(group):
         total_logs = len(group)
         night_logs = group["IsNight"].sum()
@@ -76,10 +70,8 @@ def generate_user_behavior_vectors(df, timestamp_col="Timestamp", user_col="User
         day_ratio = day_logs / total_logs
         return min(night_ratio, day_ratio)
 
-    # Group by user and date
     grouped = copy_df.groupby([user_col, "Date"])
 
-    # Feature engineering (std_hour was removed)
     session_vectors = grouped.agg(
         total_logs=("ID", "count"),
         mean_duration=("AccessDuration", "mean"),
@@ -95,54 +87,39 @@ def generate_user_behavior_vectors(df, timestamp_col="Timestamp", user_col="User
 
     return session_vectors
 
-
 def return_scaled_matrix(train, cv, test):
-    # Get feature names 
     feature_names = ['total_logs', 'mean_duration', 'fail_ratio', 'sensitive_ratio',
                     'vpn_ratio', 'unique_patient_count', 'unique_device_count', 'shift_logic']
     
-    # Drop identifiers and ensure column order
     X_train = train.drop(columns=["UserID", "Date"])[feature_names]
     X_val = cv.drop(columns=["UserID", "Date"])[feature_names]
     X_test = test.drop(columns=["UserID", "Date"])[feature_names]
     
-    # Use standard scaler to scale each dataset
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_cv_scaled = scaler.fit_transform(X_val)
     X_test_scaled = scaler.fit_transform(X_test)
-
-    # scaler.fit(X_train)  # Fit only on training data
-    # # Transform all datasets using the same scaler
-    # X_train_scaled = scaler.transform(X_train)
-    # X_cv_scaled = scaler.transform(X_val)
-    # X_test_scaled = scaler.transform(X_test)
     
-    # Return DataFrames with column names
     return (pd.DataFrame(X_train_scaled, columns=feature_names),
             pd.DataFrame(X_cv_scaled, columns=feature_names),
             pd.DataFrame(X_test_scaled, columns=feature_names))
 
-
 def behaviour_analysis(input_folder, output_path):
     """
     Performs the complete user behavior analysis:
-    - Loads raw CSV datasets
+    - Loads raw Parquet datasets
     - Generates daily user behavior vectors
     - Scales the features
-    - Saves the processed data to output path
+    - Saves the processed data to output path (parquet)
     """
-        
-    # Ensure output directory exists
     os.makedirs(output_path, exist_ok=True)
     
-    # Load datasets
     datasets = load_datasets(input_folder)
     if datasets is None:
         print("❌ Error: Failed to load datasets")
         return
         
-    train, cv, test = datasets  # Unpack the tuple
+    train, cv, test = datasets
     
     df_train = generate_user_behavior_vectors(train)
     df_cv = generate_user_behavior_vectors(cv)
@@ -150,14 +127,13 @@ def behaviour_analysis(input_folder, output_path):
     
     df_train_scaled, df_cv_scaled, df_test_scaled = return_scaled_matrix(df_train, df_cv, df_test)
     
-    # Add source column
     df_train_scaled['source'] = 'train'
     df_cv_scaled['source'] = 'cv'
     df_test_scaled['source'] = 'test'
     
-    # Save processed data to CSV (DataFrames already have column names)
-    df_train_scaled.to_csv(os.path.join(output_path, "train.csv"), index=False)
-    df_cv_scaled.to_csv(os.path.join(output_path, "cv.csv"), index=False)
-    df_test_scaled.to_csv(os.path.join(output_path, "test.csv"), index=False)
+    # Save processed data to Parquet
+    df_train_scaled.to_parquet(os.path.join(output_path, "train.parquet"), index=False)
+    df_cv_scaled.to_parquet(os.path.join(output_path, "cv.parquet"), index=False)
+    df_test_scaled.to_parquet(os.path.join(output_path, "test.parquet"), index=False)
 
     print(f"All datasets processed and saved successfully in: {output_path}")

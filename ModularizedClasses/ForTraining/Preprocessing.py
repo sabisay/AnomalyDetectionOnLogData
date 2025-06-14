@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 
-def get_data(file_path, csv_output_path=None):
-    
+def get_data(file_path, parquet_output_path=None):
     ext = os.path.splitext(file_path)[1].lower()
     if ext == ".csv":
         df = pd.read_csv(file_path)
@@ -12,19 +11,34 @@ def get_data(file_path, csv_output_path=None):
     else:
         raise ValueError("Just csv or xlsx files accepted.")
 
-    if csv_output_path is None:
-        csv_output_path = os.path.splitext(file_path)[0] + ".csv"
-    df.to_csv(csv_output_path, index=False)
-    print(f"Veri CSV olarak kaydedildi: {csv_output_path}")
+    if parquet_output_path is None:
+        parquet_output_path = os.path.splitext(file_path)[0] + ".parquet"
+    df.to_parquet(parquet_output_path, index=False)
+    print(f"Veri Parquet olarak kaydedildi: {parquet_output_path}")
 
     return df
 
 def set_dataset(Train, Validation, Test):
-    df_train = pd.read_csv(Train)
-    df_cv = pd.read_csv(Validation)
-    df_test = pd.read_csv(Test)
-    print("Datasets saved.")
-    
+    ext_train = os.path.splitext(Train)[1].lower()
+    ext_cv = os.path.splitext(Validation)[1].lower()
+    ext_test = os.path.splitext(Test)[1].lower()
+
+    if ext_train == ".parquet":
+        df_train = pd.read_parquet(Train)
+    else:
+        df_train = pd.read_csv(Train)
+
+    if ext_cv == ".parquet":
+        df_cv = pd.read_parquet(Validation)
+    else:
+        df_cv = pd.read_csv(Validation)
+
+    if ext_test == ".parquet":
+        df_test = pd.read_parquet(Test)
+    else:
+        df_test = pd.read_csv(Test)
+
+    print("Datasets loaded.")
     return df_train, df_cv, df_test
     
 def combine_dataset(df_train, df_cv, df_test):
@@ -110,18 +124,18 @@ def preprocess(train_path, cv_path, test_path, output_folder="ModularizedClasses
     1. Loads datasets from CSV or Excel files
     2. Converts all relevant columns to numeric/categorical types
     3. Combines datasets and adds a 'source' column
-    4. Optionally separates and saves processed datasets as CSV files
+    4. Optionally separates and saves processed datasets as Parquet files
 
     Args:
         train_path (str): Path to the train dataset file (CSV or XLSX)
         cv_path (str): Path to the validation dataset file (CSV or XLSX)
         test_path (str): Path to the test dataset file (CSV or XLSX)
-        output_folder (str): Folder to save the processed CSV files (default: './outputs/')
+        output_folder (str): Folder to save the processed Parquet files (default: './outputs/')
 
     Returns:
         tuple: (df_train_new, df_cv_new, df_test_new, df_all)
     """
-    # Step 1: Load and convert each dataset to CSV format if needed
+    # Step 1: Load and convert each dataset to DataFrame
     df_train = get_data(train_path)
     df_cv = get_data(cv_path)
     df_test = get_data(test_path)
@@ -135,13 +149,13 @@ def preprocess(train_path, cv_path, test_path, output_folder="ModularizedClasses
     # Step 4: Separate combined dataset back into individual sets (if needed)
     df_train_new, df_cv_new, df_test_new = seperate_dataset(df_all)
     
-    # Step 5: Save all datasets as CSV files (create folder if it doesn't exist)
+    # Step 5: Save all datasets as Parquet files (create folder if it doesn't exist)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
-    save_dataset(df_train_new, os.path.join(output_folder, "train_processed.csv"))
-    save_dataset(df_cv_new, os.path.join(output_folder, "cv_processed.csv"))
-    save_dataset(df_test_new, os.path.join(output_folder, "test_processed.csv"))
+    df_train_new.to_parquet(os.path.join(output_folder, "train_processed.parquet"), index=False)
+    df_cv_new.to_parquet(os.path.join(output_folder, "cv_processed.parquet"), index=False)
+    df_test_new.to_parquet(os.path.join(output_folder, "test_processed.parquet"), index=False)
 
     print(f"✅ All operations completed successfully. Processed files have been saved in: {output_folder}")
 
