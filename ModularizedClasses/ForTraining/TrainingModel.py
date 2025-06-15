@@ -8,6 +8,7 @@ from keras.layers import Dense, Input, Dropout
 from keras.callbacks import EarlyStopping
 from keras.regularizers import l2
 from BehaviourAnalysis import load_datasets
+from keras.layers import LSTM, RepeatVector, TimeDistributed
 
 import matplotlib.pyplot as plt
 
@@ -37,8 +38,18 @@ def build_encoder(input_dim):
     return autoencod
     
 
-def TrainModel(model_path, data_path):
+def build_lstm_autoencoder(input_dim, timesteps=1):
+    set_seed(42)
+    input_layer = Input(shape=(timesteps, input_dim))
+    encoded = LSTM(16, activation='relu', return_sequences=False)(input_layer)
+    encoded = Dropout(0.2)(encoded)
+    encoded = RepeatVector(timesteps)(encoded)
+    decoded = LSTM(16, activation='relu', return_sequences=True)(encoded)
+    output_layer = TimeDistributed(Dense(input_dim, activation='linear'))(decoded)
+    autoencoder = Model(input_layer, output_layer)
+    return autoencoder
 
+def TrainModel(model_path, data_path, timesteps=1):
     os.makedirs(model_path, exist_ok=True)
 
     # Get datasets as tuple (train, cv, test)
@@ -49,15 +60,25 @@ def TrainModel(model_path, data_path):
     # Unpack the tuple
     train, cv, test = datasets
     
-    X_train = train.drop(columns=["source"])
-    X_cv = cv.drop(columns=["source"])
-    X_test = test.drop(columns=["source"])
-    
+    X_train = train.drop(columns=["source"]).values
+    X_cv = cv.drop(columns=["source"]).values
+    X_test = test.drop(columns=["source"]).values
+
+    # Reshape for LSTM: (samples, timesteps, features)
+    def reshape_for_lstm(X, timesteps):
+        n_samples = X.shape[0] // timesteps
+        X = X[:n_samples * timesteps]
+        return X.reshape((n_samples, timesteps, X.shape[1]))
+
+    X_train = reshape_for_lstm(X_train, timesteps)
+    X_cv = reshape_for_lstm(X_cv, timesteps)
+    X_test = reshape_for_lstm(X_test, timesteps)
+
     # Early stopping
     early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
-    # Build the model
-    model = build_encoder(X_train.shape[1])
+    # Build the LSTM autoencoder model
+    model = build_lstm_autoencoder(X_train.shape[2], timesteps)
     model.compile(optimizer='adam', loss='mse')
     
     history = model.fit(
@@ -69,7 +90,7 @@ def TrainModel(model_path, data_path):
     )
     
     # Save the model
-    model.save(model_path + "autoencoder_model.keras")
+    model.save(model_path + "lstm_autoencoder_model.keras")
     
     return model, history
 

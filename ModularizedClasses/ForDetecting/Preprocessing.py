@@ -106,7 +106,7 @@ def process_all(test_path, output_folder="ModularizedClasses/ForDetecting/output
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     base_name = os.path.splitext(os.path.basename(test_path))[0]
-    save_dataset(df_test, os.path.join(output_folder, f"{base_name}_processed.csv"))
+    save_dataset(df_test, os.path.join(output_folder, f"{base_name}_processed.parquet"))
 
     print("✅ All operations completed successfully. Processed files have been saved.")
 

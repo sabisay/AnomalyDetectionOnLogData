@@ -4,17 +4,26 @@ import os
 from sklearn.preprocessing import StandardScaler
 
 def load_datasets(input_folder):
-    # List all CSV files in the input folder
-    csv_files = [f for f in os.listdir(input_folder) if f.endswith(".csv")]
-    
-    # Read all CSV files into a dictionary
-    datasets = {f: pd.read_csv(os.path.join(input_folder, f)) for f in csv_files}
+    # List all parquet files in the input folder
+    files = [f for f in os.listdir(input_folder) if f.endswith(".parquet")]
 
-    # Check the number of datasets and assign them accordingly
-    if len(datasets) != 1:
-        print(f"Error: Expected 1 dataset, but found {len(datasets)}")
+    if not files:
+        print("Error: No parquet files found in the input folder.")
         return None
-    # Map datasets to corresponding names
+
+    datasets = {}
+    for f in files:
+        file_path = os.path.join(input_folder, f)
+        try:
+            df = pd.read_parquet(file_path)
+            datasets[f] = df
+        except Exception as e:
+            print(f"Error reading {file_path}: {e}")
+            continue
+
+    if len(datasets) != 1:
+        print(f"Error: Expected 1 dataset, but found {len(datasets)} parquet files.")
+        return None
     return datasets
 
 
@@ -90,7 +99,7 @@ def behaviour_analysis(input_folder, output_path, user_path):
     - Loads raw CSV datasets
     - Generates daily user behavior vectors
     - Scales the features
-    - Saves the processed data to output path
+    - Saves the processed data to output path (as parquet)
     """
     
     # Ensure output directory exists
@@ -107,16 +116,16 @@ def behaviour_analysis(input_folder, output_path, user_path):
     print("\nProcessing DataFrame with columns:", test.columns.tolist())
     df_test = generate_user_behavior_vectors(test)
     
-    # Save user vectors with a dynamic filename based on input file
+    # Save user vectors as parquet with a dynamic filename based on input file
     input_filename = os.path.splitext(os.path.basename(next(iter(datasets.keys()))))[0]
     
-    user_vectors_file = os.path.join(user_path, f"{input_filename}_raw.csv")
-    df_test.to_csv(user_vectors_file, index=False)
+    user_vectors_file = os.path.join(user_path, f"{input_filename}_raw.parquet")
+    df_test.to_parquet(user_vectors_file, index=False)
     
     test_scaled = return_scaled_matrix(df_test)
     
-    # Save processed data to CSV
-    output_file = os.path.join(output_path, f"{input_filename}.csv")
-    test_scaled.to_csv(output_file, index=False)
+    # Save processed data to parquet
+    output_file = os.path.join(output_path, f"{input_filename}.parquet")
+    test_scaled.to_parquet(output_file, index=False)
     
     print(f"\n✅ All datasets processed and saved successfully in: {output_path}")

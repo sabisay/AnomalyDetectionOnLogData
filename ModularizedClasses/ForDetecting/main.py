@@ -5,7 +5,7 @@ from TestingModel import DetectAbnormalBehaviour
 from keras.models import load_model
 
 input = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test.csv"
-Model = r"ModularizedClasses\Model\autoencoder_model.keras"
+Model = r"ModularizedClasses\Model\lstm_autoencoder_model.keras"
 
 outputPath = r"ModularizedClasses\ForDetecting\outputs"
 behaviourPath = r"ModularizedClasses\ForDetecting\behaviours"
@@ -23,6 +23,6 @@ if __name__ == "__main__":
     predictions, errors = DetectAbnormalBehaviour(
         model_predictor = autoencod,
         threshold_num=Threshold,
-        data_path= behaviourPath + r"\Test_processed.csv",
-        raw_df_path= userPath + r"\Test_processed_raw.csv"
+        data_path= behaviourPath + r"\Test_processed.parquet",
+        raw_df_path= userPath + r"\Test_processed_raw.parquet"
     )

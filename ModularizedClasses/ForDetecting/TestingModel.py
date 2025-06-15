@@ -26,34 +26,57 @@ def print_abnormal_behaviour_rows(df, predictions, label="Test"):
         print(f"[{label}] User {user} on {date} marked as anomaly.")
     
 def DetectAbnormalBehaviour(model_predictor, threshold_num, data_path, raw_df_path):
+    """
+    Detect abnormal behaviors using either LSTM or standard autoencoder
+    """
     # Load the model
     autoencod = model_predictor
     print(f"Model loaded. Expected input shape: {autoencod.input_shape}")
     
-    # Load and prepare the data
-    df = pd.read_csv(data_path)
-    raw_df = pd.read_csv(raw_df_path)
+    # Load data
+    if data_path.endswith('.parquet'):
+        df = pd.read_parquet(data_path)
+        raw_df = pd.read_parquet(raw_df_path)
+    else:
+        df = pd.read_csv(data_path)
+        raw_df = pd.read_csv(raw_df_path)
     
-    # Select only the 8 features the model expects
+    # Select features
     expected_features = ['total_logs', 'mean_duration', 'fail_ratio', 'sensitive_ratio',
                         'vpn_ratio', 'unique_patient_count', 'unique_device_count', 'shift_logic']
     
     if not all(feature in df.columns for feature in expected_features):
         raise ValueError(f"Missing features. Required: {expected_features}")
     
+    # Prepare data
     data = df[expected_features].values.astype('float32')
-    print(f"Input data shape: {data.shape}")
+    print(f"Original data shape: {data.shape}")
     
-    # Predict using the autoencoder
+    # Check model type and reshape accordingly
+    input_shape = autoencod.input_shape
+    if len(input_shape) == 3:  # LSTM model expects (samples, timesteps, features)
+        print("LSTM model detected - reshaping to 3D")
+        data = np.reshape(data, (data.shape[0], 1, data.shape[1]))
+    else:  # Standard autoencoder expects (samples, features)
+        print("Standard autoencoder detected - using 2D shape")
+    
+    print(f"Input data shape after reshape: {data.shape}")
+    
+    # Predict
     reconstructed = autoencod.predict(data, verbose=0)
     
-    # Calculate reconstruction error (using numpy arrays)
+    # Reshape back if needed
+    if len(input_shape) == 3:
+        reconstructed = np.reshape(reconstructed, (reconstructed.shape[0], reconstructed.shape[2]))
+        data = np.reshape(data, (data.shape[0], data.shape[2]))
+    
+    # Calculate reconstruction error
     reconstruction_error = np.mean(np.square(data - reconstructed), axis=1)
     
     # Identify abnormal behaviours    
     test_pred = (reconstruction_error > threshold_num).astype(int)
     
-    # Enhanced visual output
+    # Print results
     total = len(reconstruction_error)
     anomalies = np.sum(test_pred)
     normal = total - anomalies
