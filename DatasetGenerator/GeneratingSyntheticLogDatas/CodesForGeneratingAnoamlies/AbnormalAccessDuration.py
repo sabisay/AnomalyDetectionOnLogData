@@ -3,9 +3,9 @@ import numpy as np
 import os
 
 # Ayarlanabilir dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AbnormalAccessDuration.csv"
+input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+anomalies_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_anomalous_access_duration.csv"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -21,19 +21,32 @@ valid_users = (
 )
 
 # Rastgele 3 kullanıcı seç
-selected_users = np.random.choice(valid_users, 2, replace=False)
+selected_users = np.random.choice(valid_users, 5, replace=False)
+# Kullanıcıları iki gruba ayır
+short_duration_users = selected_users[:2]  # İlk 2 kullanıcı kısa süre
+long_duration_users = selected_users[2:]   # Son 2 kullanıcı uzun süre
 
 # Anomalileri kaydetmek için index listesi
 anomalous_indices = []
 
-# Her kullanıcı için loglarının %20'sine anomali uygula (4000-6000 sn)
-for user in selected_users:
+# Kısa süreli anomaliler için kullanıcıları işle
+for user in short_duration_users:
     user_logs = df[df["UserID"] == user]
-    n_anomalies = max(1, int(len(user_logs) * 0.07))
+    n_anomalies = max(1, int(len(user_logs) * 0.06))
     anomaly_rows = user_logs.sample(n=n_anomalies, random_state=42)
     
     indices = anomaly_rows.index
-    df.loc[indices, "AccessDuration"] = np.random.randint(30, 91, size=n_anomalies)
+    df.loc[indices, "AccessDuration"] = np.random.randint(10, 61, size=n_anomalies)  # 10-60 saniye
+    anomalous_indices.extend(indices)
+
+# Uzun süreli anomaliler için kullanıcıları işle
+for user in long_duration_users:
+    user_logs = df[df["UserID"] == user]
+    n_anomalies = max(1, int(len(user_logs) * 0.06))
+    anomaly_rows = user_logs.sample(n=n_anomalies, random_state=42)
+    
+    indices = anomaly_rows.index
+    df.loc[indices, "AccessDuration"] = np.random.randint(4000, 6001, size=n_anomalies)  # 4000-6000 saniye
     anomalous_indices.extend(indices)
 
 # Anormal satırları ayrı kaydet
@@ -49,7 +62,7 @@ print(df.loc[anomalous_indices, "ID"].tolist())
 
 # --- Anomalous UserID'leri kayıt altına al ---
 anomalous_user_ids = df.loc[anomalous_indices, "UserID"].unique()
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
+user_tracking_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 
 # Varsa mevcut kullanıcıları oku
 if os.path.exists(user_tracking_path):

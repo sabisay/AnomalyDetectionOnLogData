@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_DuplicateTimestempAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
+input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+anomalies_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_anomalous_duplicate_timestamp.csv"
+user_tracking_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -24,7 +24,7 @@ eligible_users = (
     .value_counts()
     .loc[lambda x: x > 10]  # En az 10 logu olan kullanıcılar
     .index
-    .difference(used_user_ids)
+    .difference(list(used_user_ids))
     .tolist()
 )
 
@@ -35,7 +35,7 @@ selected_user = np.random.choice(eligible_users)
 
 # Kullanıcının loglarını al
 user_logs = df[df["UserID"] == selected_user]
-n_anomalies = int(len(user_logs) * 0.8)
+n_anomalies = int(len(user_logs) * 0.7)
 anomaly_rows = user_logs.sample(n=n_anomalies, random_state=42)
 indices = anomaly_rows.index
 
@@ -54,8 +54,12 @@ df.to_csv(output_path, index=False)
 
 # Uygulanan ID'leri yazdır
 print("Duplicate Timestamp Anomali uygulanan satırların ID'leri:")
-print(df.loc[indices, "ID"].tolist())
-
+ids = df.loc[indices, "ID"]
+# Ensure ids is always printed as a list, regardless of its type
+if isinstance(ids, (pd.Series, np.ndarray, list)):
+    print(list(ids))
+else:
+    print([ids])
 # --- UserID'yi txt dosyasına ekle ---
 if os.path.exists(user_tracking_path):
     with open(user_tracking_path, "r") as f:

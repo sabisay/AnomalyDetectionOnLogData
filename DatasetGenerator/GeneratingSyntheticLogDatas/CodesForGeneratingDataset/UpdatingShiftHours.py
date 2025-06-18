@@ -4,7 +4,7 @@ import random
 from datetime import datetime, timedelta
 
 # Mevcut veri setini oku
-df = pd.read_csv(r"./GeneratingSyntheticLogDatas/TrdTry/Final/hospital_access_logs.csv")
+df = pd.read_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv")
 
 # Rastgele yarısını seç ve gruplara ayır
 np.random.seed(42)
@@ -16,7 +16,7 @@ day_shift_users = []
 night_shift_users = []
 
 for role in roles:
-    role_users = df[df["UserRole"] == role]["UserID"].unique()
+    role_users = df[df["UserRole"] == role]["UserID"].unique().tolist()
     random.shuffle(role_users)
     half = len(role_users) // 2
     day_shift_users.extend(role_users[:half])
@@ -27,7 +27,7 @@ for index, row in df.iterrows():
     if row["UserID"] in day_shift_users:
         new_hour = random.randint(9, 17)  # 09:00 - 18:00
     else:
-        new_hour = random.choice(list(range(20, 24)) + list(range(0, 7)))  # 20:00 - 07:00
+        new_hour = random.choice(list(range(19, 24)) + list(range(0, 7)))  # 20:00 - 07:00
     
     new_minute = random.randint(0, 59)
     new_second = random.randint(0, 59)
@@ -36,5 +36,5 @@ for index, row in df.iterrows():
     df.at[index, "Timestamp"] = new_timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
 # Güncellenmiş veri setini kaydet
-df.to_csv(r"./GeneratingSyntheticLogDatas/TrdTry/Final/hospital_access_logs.csv", index=False)
+df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv", index=False)
 print("Log verileri vardiya sistemine göre güncellendi ve kaydedildi!")

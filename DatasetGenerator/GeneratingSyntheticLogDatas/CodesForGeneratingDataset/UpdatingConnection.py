@@ -2,7 +2,7 @@ import pandas as pd
 import random
 
 # CSV dosyasını yükleme
-df = pd.read_csv(r"./GeneratingSyntheticLogDatas/TrdTry/hospital_access_logs.csv")
+df = pd.read_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv")
 
 # Tüm farklı USR_ID'leri al
 unique_ids = df['UserID'].unique()
@@ -15,7 +15,7 @@ selected_ids = random.sample(list(unique_ids), num_to_select)
 df.loc[df['UserID'].isin(selected_ids), 'Connection'] = 'VPN'
 
 # Değişiklikleri kaydet
-df.to_csv(r"./GeneratingSyntheticLogDatas/TrdTry/Final/hospital_access_logs.csv", index=False)
+df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv", index=False)
 print("Updated!")
 
 # Seçilen ID'leri yazdır

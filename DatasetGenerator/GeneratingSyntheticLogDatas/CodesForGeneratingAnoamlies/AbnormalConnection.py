@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_VPNAccessAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
+input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+anomalies_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_anomalous_connection.csv"
+user_tracking_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -29,17 +29,17 @@ onsite_users = (
 eligible_users = [uid for uid in onsite_users if uid not in used_user_ids]
 
 # Rastgele 3 kullanıcı seç
-if len(eligible_users) < 2:
+if len(eligible_users) < 3:
     selected_users = eligible_users  # yetersiz kullanıcı varsa hepsini al
 else:
-    selected_users = np.random.choice(eligible_users, 2, replace=False)
+    selected_users = np.random.choice(eligible_users, 3, replace=False)
 
 anomalous_indices = []
 
 # Seçilen kullanıcıların bazı loglarının Connection'ını VPN yap
 for user in selected_users:
     user_logs = df[(df["UserID"] == user) & (df["Connection"] == "OnSite")]
-    n_anomalies = max(1, int(len(user_logs) * 0.05))
+    n_anomalies = max(1, int(len(user_logs) * 0.03))
     anomaly_rows = user_logs.sample(n=n_anomalies, random_state=42)
     
     indices = anomaly_rows.index

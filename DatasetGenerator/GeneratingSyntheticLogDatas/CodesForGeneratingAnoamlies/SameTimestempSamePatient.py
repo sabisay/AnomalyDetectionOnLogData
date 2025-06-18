@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV.csv"
-anomalies_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_SameTimestempSamePatientAnomaly.csv"
-user_tracking_path = r"./GeneratingSyntheticLogDatas/TrdTry/CV/CV_AnomalousUsers.txt"
+input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+anomalies_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Tes_anomalous_same_timestamp_same_patient.csv"
+user_tracking_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 
 # Veriyi yükle
 df = pd.read_csv(input_path)
@@ -24,7 +24,7 @@ eligible_users = (
     .value_counts()
     .loc[lambda x: x > 10]
     .index
-    .difference(used_user_ids)
+    .difference(list(used_user_ids))
     .tolist()
 )
 
@@ -44,7 +44,7 @@ anomalous_indices = []
 
 for user in selected_users:
     user_logs = df[df["UserID"] == user]
-    n_anomalies = int(len(user_logs) * 0.2)
+    n_anomalies = int(len(user_logs) * 0.18)
     sampled = user_logs.sample(n=n_anomalies, random_state=42)
     indices = sampled.index
 

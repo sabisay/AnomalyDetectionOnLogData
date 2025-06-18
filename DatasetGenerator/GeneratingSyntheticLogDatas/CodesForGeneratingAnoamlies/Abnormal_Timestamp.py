@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 import random
 
 # Dosya yolları
-input_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-output_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test.csv"
-anomaly_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AbnormalTimestamp.csv"
-anomalous_users_path = r"./GeneratingSyntheticLogDatas/TrdTry/Test/Test_AnomalousUsers.txt"
+input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+anomaly_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_anomalous_timestamp.csv"
+anomalous_users_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 
 # Veriyi oku
 df = pd.read_csv(input_path)
@@ -55,7 +55,7 @@ anomalous_indices = []
 night_logs = df[df["UserID"] == selected_night]
 if len(night_logs) < 3:
     raise ValueError(f"{selected_night} kullanıcısında yeterli log yok.")
-night_logs = night_logs.sample(n=3, random_state=42)
+night_logs = night_logs.sample(n=5, random_state=42)
 
 for idx in night_logs.index:
     new_hour = random.randint(9, 17)
@@ -70,9 +70,9 @@ for user in selected_days:
     user_logs = df[df["UserID"] == user]
     if len(user_logs) < 3:
         raise ValueError(f"{user} kullanıcısında yeterli log yok.")
-    user_logs = user_logs.sample(n=3, random_state=42)
+    user_logs = user_logs.sample(n=5, random_state=42)
     for idx in user_logs.index:
-        new_hour = random.randint(0, 5)
+        new_hour = random.randint(0, 6)
         new_minute = random.randint(0, 59)
         new_second = random.randint(0, 59)
         ts = df.at[idx, "Timestamp"]
