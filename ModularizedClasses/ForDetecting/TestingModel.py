@@ -4,13 +4,37 @@ import numpy as np
 
 def print_results_generalized(total, normal, anomalies, reconstruction_error):
     print("\n" + "="*50)
-    print("🔍 ANOMALY DETECTION RESULTS")
+    print("🔍 ANOMALY DETECTION RESULTS BY LSTM AUTOENCODER")
     print("="*50)
     print(f"📊 Total Sequences: {total}")
     print(f"✅ Normal: {normal} ({(normal/total)*100:.2f}%)")
     print(f"⚠️ Anomalies: {anomalies} ({(anomalies/total)*100:.2f}%)")
     print(f"📈 Average Error: {np.mean(reconstruction_error):.6f}")
     print("="*50 + "\n")
+
+def setDetectedAbnormalUsers(df, predictions, label="Test"):
+    abnormal_users = []
+    anomalous_indices = np.where(predictions == 1)[0]
+    
+    if len(anomalous_indices) == 0:
+        return abnormal_users
+    
+    for idx in anomalous_indices:
+        row = df.iloc[idx]
+        user = row['UserID'] if 'UserID' in row else 'Unknown'
+        if user != 'Unknown':
+            # UserID'yi formatlama
+            user_num = int(user)  # String'i integer'a çevir
+            if user_num < 10:  # Tek basamaklı
+                formatted_user = f"USR_00{user_num}"
+            elif user_num < 100:  # İki basamaklı
+                formatted_user = f"USR_0{user_num}"
+            else:  # Üç basamaklı
+                formatted_user = f"USR_{user_num}"
+            
+            abnormal_users.append(formatted_user)
+    
+    return list(set(abnormal_users))
 
 def print_abnormal_behaviour_rows(df, predictions, label="Test"):
     # find abnormals
@@ -81,7 +105,8 @@ def DetectAbnormalBehaviour(model_predictor, threshold_num, data_path, raw_df_pa
     anomalies = np.sum(test_pred)
     normal = total - anomalies
     
+    abnormal_users = setDetectedAbnormalUsers(raw_df, test_pred, label="Test")
     print_results_generalized(total, normal, anomalies, reconstruction_error)
     print_abnormal_behaviour_rows(raw_df, test_pred, label="Test")
     
-    return test_pred, reconstruction_error
+    return test_pred, reconstruction_error, abnormal_users

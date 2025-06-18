@@ -79,7 +79,7 @@ def convert_to_numeric(df):
     return df
 
 def save_dataset(df, name):
-    df.to_csv(name, index=False)
+    df.to_parquet(name, index=False)
     
 def process_all(test_path, output_folder="ModularizedClasses/ForDetecting/outputs/"):
     """
