@@ -68,15 +68,23 @@ elif user_info:
             show_general_dashboard(df)
             st.markdown("---")
 
-            if role in ["admin", "analyst"]:
-                if st.button("🔎 Analize Başla (Preprocessing)"):
-                    with st.spinner("Veri işleniyor..."):
-                        processed_df, err = post_preprocess_api(df)
-                    if err:
-                        st.error(f"Preprocessing API hatası: {err}")
-                    else:
-                        st.success("Preprocessing başarılı!")
-                        st.dataframe(processed_df.head())
+if role in ["admin", "analyst"]:
+    if st.button("🚀 Anomali Tespitini Başlat"):
+        if uploaded_file:
+            with st.spinner("Model çalıştırılıyor..."):
+                headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                res = requests.post(
+                    f"{API_URL}/run-detection",
+                    files={"file": uploaded_file},
+                    headers=headers
+                )
+            if res.status_code == 200:
+                result = res.json()
+                st.success(f"✅ {result['count']} anormal kullanıcı tespit edildi.")
+                st.json(result)
+            else:
+                st.error(f"❌ Hata oluştu: {res.text}")
+
 
             st.subheader("🧾 Veri Önizleme")
             st.dataframe(df.head())
