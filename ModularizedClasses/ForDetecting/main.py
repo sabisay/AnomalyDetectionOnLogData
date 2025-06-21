@@ -2,7 +2,7 @@ import numpy as np
 from keras.models import load_model
 from utils import abnormal_user_detector
 
-input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test.csv"
+input_path = r"temp_uploaded.csv"
 model_path = r"ModularizedClasses\Model\lstm_autoencoder_model.keras"
 output_parquet = r"ModularizedClasses\ForDetecting\outputs\Test_processed.parquet"
 threshold = 0.452005

@@ -8,19 +8,26 @@ from sklearn.metrics import confusion_matrix, f1_score, classification_report
 from sklearn.preprocessing import StandardScaler
 
 def get_data(file_path, output_path=None):
-    
     ext = os.path.splitext(file_path)[1].lower()
+    
     if ext == ".csv":
-        df = pd.read_csv(file_path)
+        try:
+            df = pd.read_csv(file_path, encoding="utf-8")
+        except UnicodeDecodeError:
+            df = pd.read_csv(file_path, encoding="ISO-8859-9")
+    
     elif ext in [".xlsx", ".xls"]:
         df = pd.read_excel(file_path)
+    
     else:
         raise ValueError("Just csv or xlsx files accepted.")
 
     if output_path is None:
         output_path = os.path.splitext(file_path)[0] + ".parquet"
+    
     df.to_parquet(output_path, index=False)
     print(f"Data saved as Parquet: {output_path}")
+
     
 def save_as_parquet(df, name, output_path = None):
     df.to_parquet(name, index=False)  

@@ -11,6 +11,7 @@ from visualization import (
 import jwt
 import time
 
+
 API_URL = "http://localhost:5000"  # Flask API URL
 
 st.set_page_config(page_title="Anomali Tespit Arayüzü", layout="wide")
@@ -68,6 +69,13 @@ elif user_info:
             show_general_dashboard(df)
             st.markdown("---")
 
+            uploaded_file.seek(0)
+
+            extension = uploaded_file.name.split(".")[-1]
+            with open(f"temp_uploaded.{extension}", "wb") as f:
+                f.write(uploaded_file.read())
+
+
 if role in ["admin", "analyst"]:
     if st.button("🚀 Anomali Tespitini Başlat"):
         if uploaded_file:
@@ -80,8 +88,8 @@ if role in ["admin", "analyst"]:
                 )
             if res.status_code == 200:
                 result = res.json()
-                st.success(f"✅ {result['count']} anormal kullanıcı tespit edildi.")
-                st.json(result)
+                st.success("✅ Anormal kullanıcılar başarıyla tespit edildi.")
+                st.json(result['abnormal_users'])
             else:
                 st.error(f"❌ Hata oluştu: {res.text}")
 
