@@ -4,7 +4,7 @@ import random
 from datetime import datetime, timedelta
 
 # Mevcut veri setini oku
-df = pd.read_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv")
+df = pd.read_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/twohundredtousands/hospital_access_logs.csv")
 
 # Rastgele yarısını seç ve gruplara ayır
 np.random.seed(42)
@@ -36,5 +36,5 @@ for index, row in df.iterrows():
     df.at[index, "Timestamp"] = new_timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
 # Güncellenmiş veri setini kaydet
-df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv", index=False)
+df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/twohundredtousands/hospital_access_logs.csv", index=False)
 print("Log verileri vardiya sistemine göre güncellendi ve kaydedildi!")

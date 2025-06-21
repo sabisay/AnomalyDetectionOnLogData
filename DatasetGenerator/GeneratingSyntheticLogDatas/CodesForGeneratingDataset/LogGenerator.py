@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import random
 
 # Sabitler
-NUM_RECORDS = 500000
+NUM_RECORDS = 200000
 NUM_USERS = 200  # Personel sayısı
 NUM_PATIENTS = 20000  # Hasta sayısı
 NUM_DEPARTMENTS = 10  # Departman sayısı
@@ -51,7 +51,7 @@ for i in range(NUM_RECORDS):
     role = user_roles[user_id]
     
     # 9 AM - 6 PM aralığında rastgele zaman üretme
-    random_day = random.randint(0, 2)  # 3 günlük periyot
+    random_day = random.randint(0, 3)  # 3 günlük periyot
     random_hour = random.randint(9, 17)  # 9AM - 6PM
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
@@ -78,5 +78,5 @@ df = pd.DataFrame(records, columns=["ID", "UserID", "Department", "UserRole", "C
                                     "AccessDuration", "DeviceID", "PatientID", "IsAccessFail", "IsSensitive", "VisitDepartment"])
 
 # CSV'ye kaydetme
-df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/Fourth/hospital_access_logs.csv", index=False)
+df.to_csv(r"./DatasetGenerator/GeneratingSyntheticLogDatas/twohundredtousands/hospital_access_logs.csv", index=False)
 print("Sentetik hastane erişim verisi oluşturuldu ve kaydedildi!")

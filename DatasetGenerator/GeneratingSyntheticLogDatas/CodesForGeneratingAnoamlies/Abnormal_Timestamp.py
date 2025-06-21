@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 import random
 
 # Dosya yolları
-input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
-output_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test.csv"
+input_path = r"./DatasetGenerator/GeneratingSyntheticLogDatas/twohundredtousands/test/Test.csv"
+output_path = r"./DatasetGenerator/GeneratingSyntheticLogDatas/twohundredtousands/test/Test_timestamp.csv"
 anomaly_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_anomalous_timestamp.csv"
 anomalous_users_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\Fourth\test\Test_abnormal_users.txt"
 

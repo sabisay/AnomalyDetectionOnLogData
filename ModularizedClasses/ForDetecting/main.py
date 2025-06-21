@@ -4,10 +4,9 @@ from BehaviourAnalysis import behaviour_analysis
 from TestingModel import DetectAbnormalBehaviour
 from keras.models import load_model
 from Evaluation import create_comparison_df, evaluate_model_performance
-from SecondPhase import explain_anomalies
 
 input = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test.csv"
-Model = r"ModularizedClasses\Model\autoencoder_model.keras"
+Model = r"ModularizedClasses\Model\lstm_autoencoder_model.keras"
 Label = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test_AnomalousUsers.txt"
 
 outputPath = r"ModularizedClasses\ForDetecting\outputs"
@@ -30,6 +29,7 @@ if __name__ == "__main__":
         raw_df_path= userPath + r"\Test_processed_raw.parquet"
     )
     
+    ##bu kısım  frontende bağlanılacak
     # Get true labels from file
     # Remove duplicates from abnormal_users
     abnormal_users = list(set(abnormal_users))
@@ -42,6 +42,6 @@ if __name__ == "__main__":
     with open(Label, 'r') as f:
         y_true = [line.strip() for line in f]
         
-    comparison_df = create_comparison_df(y_true, abnormal_users)
-    evaluate_model_performance( comparison_df['Label'], comparison_df['DetectedAbnormal'])
+    # comparison_df = create_comparison_df(y_true, abnormal_users)
+    # evaluate_model_performance( comparison_df['Label'], comparison_df['DetectedAbnormal'])
     
