@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 def load_data(uploaded_file):
     """
@@ -15,3 +16,38 @@ def load_data(uploaded_file):
         return df, None
     except Exception as e:
         return None, f"Dosya okunurken hata oluştu: {str(e)}"
+
+# def save_and_forward(uploaded_file):
+#     try:
+#         file_content = uploaded_file.getvalue()
+
+#         extension = uploaded_file.name.split('.')[-1]
+#         filename = uploaded_file.name
+#         save_dir = os.path.join(".", "temp_uploaded")
+#         os.makedirs(save_dir, exist_ok=True)
+#         save_path = os.path.join(save_dir, filename)
+
+#         with open(save_path, "wb") as f:
+#             f.write(file_content)
+
+#         return save_path, file_content, None
+#     except Exception as e:
+#         return None, None, str(e)
+
+def save_and_forward(uploaded_file):
+    try:
+        file_content = uploaded_file.getvalue()
+
+        ext = os.path.splitext(uploaded_file.name)[1].lower()
+        save_path = os.path.abspath(f"temp_uploaded{ext}")  # örn: ./temp_uploaded.csv
+
+        # Eğer dosya varsa sil
+        if os.path.exists(save_path):
+            os.remove(save_path)
+
+        with open(save_path, "wb") as f:
+            f.write(file_content)
+
+        return save_path, file_content, None
+    except Exception as e:
+        return None, None, str(e)

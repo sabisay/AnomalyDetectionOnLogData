@@ -1,13 +1,8 @@
 import streamlit as st
 import requests
-from data_loader import load_data
+from data_loader import load_data, save_and_forward
 from dashboard import show_general_dashboard
-from api_utils import post_preprocess_api
-from visualization import (
-    plot_access_duration_histogram,
-    plot_user_access_bar,
-    plot_time_series
-)
+
 import jwt
 import time
 
@@ -69,11 +64,12 @@ elif user_info:
             show_general_dashboard(df)
             st.markdown("---")
 
-            uploaded_file.seek(0)
+        file_path, file_content, error = save_and_forward(uploaded_file)
+        if error:
+            st.error(error)
+        else:
+            st.success("Dosya diske kaydedildi")
 
-            extension = uploaded_file.name.split(".")[-1]
-            with open(f"temp_uploaded.{extension}", "wb") as f:
-                f.write(uploaded_file.read())
 
 
 if role in ["admin", "analyst"]:
@@ -94,7 +90,6 @@ if role in ["admin", "analyst"]:
                 st.error(f"❌ Hata oluştu: {res.text}")
 
 
-            st.subheader("🧾 Veri Önizleme")
-            st.dataframe(df.head())
+            
     else:
         st.info("Lütfen bir veri dosyası yükleyin.")

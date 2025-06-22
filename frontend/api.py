@@ -27,27 +27,40 @@ def login():
     token = generate_token(username, user["role"])
     return jsonify({"token": token})
 
+
+
 @app.route("/run-detection", methods=["POST"])
 @login_required(roles=["admin", "analyst"])
 def run_detection():
     try:
-        if "file" not in request.files:
-            return jsonify({"error": "No file part in the request"}), 400
+        # temp_uploaded dosyasını otomatik tespit et
+        for ext in [".csv", ".xlsx"]:
+            input_path = os.path.abspath(f"temp_uploaded{ext}")
+            if os.path.exists(input_path):
+                break
+        else:
+            return jsonify({"error": "No uploaded file found in temp."}), 400
 
-        file = request.files["file"]
-        if file.filename == "":
-            return jsonify({"error": "No selected file"}), 400
+        model_path = os.path.abspath("ModularizedClasses/Model/lstm_autoencoder_model.keras")
+        output_parquet = os.path.abspath("ModularizedClasses/ForDetecting/outputs/Test_processed.parquet")
+        threshold = 0.452005
 
+        model = load_model(model_path)
 
-        # Uzantıyı al
-        ext = os.path.splitext(file.filename)[1].lower()
-        if ext not in [".csv", ".xlsx"]:
-            return jsonify({"error": "Unsupported file type"}), 400
+        abnormal_users = abnormal_user_detector(
+            input_path=input_path,
+            model=model,
+            output_parquet=output_parquet,
+            threshold=threshold
+        )
 
-        # Dosyayı proje köküne temp_uploaded.csv/xlsx olarak kaydet
-        temp_input_path = os.path.abspath(f"temp_uploaded{ext}")
-        file.save(temp_input_path)
+        return jsonify({
+            "message": f"Detection completed by {request.user['username']}",
+            "abnormal_users": abnormal_users
+        })
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
  
 
@@ -61,7 +74,7 @@ def run_detection():
 
         # Pipeline çalıştır
         abnormal_users = abnormal_user_detector(
-            input_path=temp_input_path,
+            input_path=save_path,
             model=model,
             output_parquet=output_parquet,
             threshold=threshold
