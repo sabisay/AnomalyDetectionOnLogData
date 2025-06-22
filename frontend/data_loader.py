@@ -17,24 +17,11 @@ def load_data(uploaded_file):
     except Exception as e:
         return None, f"Dosya okunurken hata oluştu: {str(e)}"
 
-# def save_and_forward(uploaded_file):
-#     try:
-#         file_content = uploaded_file.getvalue()
-
-#         extension = uploaded_file.name.split('.')[-1]
-#         filename = uploaded_file.name
-#         save_dir = os.path.join(".", "temp_uploaded")
-#         os.makedirs(save_dir, exist_ok=True)
-#         save_path = os.path.join(save_dir, filename)
-
-#         with open(save_path, "wb") as f:
-#             f.write(file_content)
-
-#         return save_path, file_content, None
-#     except Exception as e:
-#         return None, None, str(e)
 
 def save_and_forward(uploaded_file):
+    if uploaded_file is None:
+        return None, None, "Dosya nesnesi alınamadı."
+    
     try:
         file_content = uploaded_file.getvalue()
 

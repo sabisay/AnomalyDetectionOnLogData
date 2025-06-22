@@ -1,7 +1,8 @@
 import sys
 import os
+import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from keras.models import load_model
 from auth import generate_token, login_required
 from users_db import users
@@ -41,7 +42,7 @@ def run_detection():
         else:
             return jsonify({"error": "No uploaded file found in temp."}), 400
 
-        model_path = os.path.abspath("ModularizedClasses/Model/lstm_autoencoder_model.keras")
+        model_path = os.path.abspath("ModularizedClasses/Model/autoencoder_model.keras")
         output_parquet = os.path.abspath("ModularizedClasses/ForDetecting/outputs/Test_processed.parquet")
         threshold = 0.452005
 
@@ -54,36 +55,14 @@ def run_detection():
             threshold=threshold
         )
 
-        return jsonify({
-            "message": f"Detection completed by {request.user['username']}",
-            "abnormal_users": abnormal_users
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
- 
-
-        # Model ve threshold
-        model_path = r"ModularizedClasses/Model/lstm_autoencoder_model.keras"
-        output_parquet = r"ModularizedClasses/ForDetecting/outputs/Test_processed.parquet"
-        threshold = 0.452005
-
-        # Model yükle
-        model = load_model(model_path)
-
-        # Pipeline çalıştır
-        abnormal_users = abnormal_user_detector(
-            input_path=save_path,
-            model=model,
-            output_parquet=output_parquet,
-            threshold=threshold
+        return Response(
+            json.dumps({
+                "message": f"Detection completed by {request.user['username']}",
+                "abnormal_users": abnormal_users
+            }, ensure_ascii=False),
+            mimetype="application/json"
         )
 
-        return jsonify({
-            "message": f"Detection completed by {request.user['username']}",
-            "abnormal_users": abnormal_users
-        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
