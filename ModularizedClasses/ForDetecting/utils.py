@@ -24,7 +24,10 @@ def get_data(file_path, output_path=None):
 
     if output_path is None:
         output_path = os.path.splitext(file_path)[0] + ".parquet"
-    
+
+    # Klasörü oluştur (varsa hata vermez)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
     df.to_parquet(output_path, index=False)
     print(f"Data saved as Parquet: {output_path}")
 
