@@ -55,10 +55,13 @@ elif user_info:
         st.rerun()
 
     uploaded_file = st.file_uploader("Veri dosyasını yükleyin (.csv, .xlsx):", type=["csv", "xlsx"])
+    df = None
+    file_ready = False
     if uploaded_file:
         df, error = load_data(uploaded_file)
         if error:
             st.error(error)
+            file_ready = False
         else:
             st.success("Veri başarıyla yüklendi ✅")
             show_general_dashboard(df)
@@ -68,11 +71,12 @@ elif user_info:
         if error:
             st.error(error)
         else:
-            st.success("Dosya diske kaydedildi")
+            st.success("Dosya kaydedildi")
+            file_ready = True
 
 
 
-if role in ["admin", "analyst"]:
+if role in ["admin", "analyst"] and file_ready:
     if st.button("🚀 Anomali Tespitini Başlat"):
         if uploaded_file:
             with st.spinner("Model çalıştırılıyor..."):
