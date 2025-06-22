@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, f1_score, classification_report
@@ -9,25 +10,33 @@ from sklearn.preprocessing import StandardScaler
 
 def get_data(file_path, output_path=None):
     ext = os.path.splitext(file_path)[1].lower()
-    
+
     if ext == ".csv":
         try:
-            df = pd.read_csv(file_path, encoding="utf-8")
+            # İlk 1KB’lık kısmı alıp ayırıcıyı tespit et
+            with open(file_path, 'r', encoding='utf-8') as f:
+                sample = f.read(1024)
+                try:
+                    dialect = csv.Sniffer().sniff(sample)
+                    sep = dialect.delimiter
+                except csv.Error:
+                    sep = ','  # fallback
+
+            df = pd.read_csv(file_path, encoding="utf-8", sep=sep)
+
         except UnicodeDecodeError:
-            df = pd.read_csv(file_path, encoding="ISO-8859-9")
-    
+            df = pd.read_csv(file_path, encoding="ISO-8859-9", sep=sep)
+
     elif ext in [".xlsx", ".xls"]:
         df = pd.read_excel(file_path)
-    
+
     else:
         raise ValueError("Just csv or xlsx files accepted.")
 
     if output_path is None:
         output_path = os.path.splitext(file_path)[0] + ".parquet"
 
-    # Klasörü oluştur (varsa hata vermez)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
     df.to_parquet(output_path, index=False)
     print(f"Data saved as Parquet: {output_path}")
 
@@ -311,6 +320,7 @@ def abnormal_user_detector(
         print(f"{i}. {user}")
     
     return abnormal_users
+
 
 
 ####### THIS IS VISUALIZATION OF MATRIX #######

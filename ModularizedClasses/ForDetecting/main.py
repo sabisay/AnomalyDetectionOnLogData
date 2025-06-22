@@ -3,7 +3,17 @@ import numpy as np
 from keras.models import load_model
 from utils import abnormal_user_detector
 
-input_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\SecondTry\Test.xlsx"
+possible_extensions = [".csv", ".xlsx"]
+input_path = None
+for ext in possible_extensions:
+    candidate = f"temp_uploaded{ext}"
+    if os.path.exists(candidate):
+        input_path = candidate
+        break
+
+if input_path is None:
+    raise FileNotFoundError("No input file found (expected temp_uploaded.csv or temp_uploaded.xlsx)")
+
 model_path = r"ModularizedClasses\Model\autoencoder_model.keras"
 output_parquet = r"ModularizedClasses\ForDetecting\outputs\Test_processed.parquet"
 threshold = 0.452005
