@@ -28,15 +28,19 @@ def show_general_dashboard(df):
             top_users = df.groupby(['User_ID', 'User_Role']).size().reset_index(name='Count')
             top_users = top_users.sort_values(by='Count', ascending=False).head(5)
             fig_top_users = px.bar(
-                top_users, x="User_ID", y="Count", color="User_Role",
-                title="Top 5 Users",
-                height=300,
-                color_discrete_map={
-                    "Hemşire": "#4D96FF", 
-                    "Yonetici": "#FFB72B",
-                    "Sekreter": "#EA5C5A"
-                }
-            )
+            top_users, 
+            x="User_ID", 
+            y="Count", 
+            color="User_Role",
+            title="Top 5 Users",
+            height=300,
+            color_discrete_map={
+                "Hemşire": "#4D96FF", 
+                "Yonetici": "#FFB72B",
+                "Sekreter": "#EA5C5A"
+            },
+            category_orders={"User_ID": top_users["User_ID"].tolist()}  # 🔥 Sıralamayı buradan belirliyoruz
+)
             fig_top_users.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
