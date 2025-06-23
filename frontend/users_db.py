@@ -9,10 +9,6 @@ users = {
     "analyst": {
         "password": bcrypt.hash("test123"),
         "role": "analyst"
-    },
-    "user": {
-        "password": bcrypt.hash("test123"),
-        "role": "user"
     }
 }
 
