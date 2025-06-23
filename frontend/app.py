@@ -124,6 +124,7 @@ elif st.session_state.page == "upload" and user_info:
                         if res.status_code == 200:
                             result = res.json()
                             st.session_state.abnormals = result["abnormal_users"]
+                            st.session_state.summary = result.get("summary", {})
                             st.session_state.df = df
                             st.session_state.selected_user = st.session_state.abnormals[0]
                             st.session_state.page = "results"
@@ -166,11 +167,28 @@ elif st.session_state.page == "results" and user_info:
             st.subheader("📄 Kullanıcının Tüm Logları (Detaylı)")
             st.dataframe(user_logs)
 
-    # Role: analyst => sadece liste
+    # Role: analyst => özet analiz
     elif user_info["role"] == "analyst":
-        st.warning("Bu sayfa yalnızca kullanıcı listesini gösterir (Analyst)")
-        st.markdown(f"👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
+        st.success("📊 Anomali Tespiti Özeti (Analyst)")
+
+        st.markdown(f"👥 **Toplam {len(st.session_state.abnormals)} anormal kullanıcı** tespit edildi.")
         st.table(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
+
+        if "summary" in st.session_state:
+            summary = st.session_state["summary"]
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("📦 Toplam", summary["total"])
+            with col2:
+                st.metric("✅ Normal", summary["normal"])
+            with col3:
+                st.metric("⚠️ Anomali", summary["anomalies"])
+
+            st.metric("📈 Ortalama Hata", f"{summary['mean_error']:.6f}")
+
+            st.markdown("### 📅 Anomali Detayları")
+            st.table(pd.DataFrame(summary["details"]))
+
 
 # --- Sayfa: Kullanıcı Yönetimi (Admin)
 elif st.session_state.page == "user_mgmt" and user_info:

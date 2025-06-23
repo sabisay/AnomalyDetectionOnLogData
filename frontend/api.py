@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify, Response
 from keras.models import load_model
@@ -49,7 +50,7 @@ def run_detection():
 
         model = load_model(model_path)
 
-        abnormal_users = abnormal_user_detector(
+        abnormal_users, session_vectors, test_pred, reconstruction_error, total, normal, anomalies = abnormal_user_detector(
             input_path=input_path,
             model=model,
             output_parquet=output_parquet,
@@ -59,10 +60,21 @@ def run_detection():
         return Response(
             json.dumps({
                 "message": f"Detection completed by {request.user['username']}",
-                "abnormal_users": abnormal_users
+                "abnormal_users": abnormal_users,
+                "summary": {
+                    "total": int(total),
+                    "normal": int(normal),
+                    "anomalies": int(anomalies),
+                    "mean_error": float(np.mean(reconstruction_error)),
+                    "details": [
+                        {"user": str(row['UserID']), "date": str(row['Date'])}
+                        for i, row in session_vectors.iloc[np.where(test_pred == 1)[0]].iterrows()
+                    ]
+                }
             }, ensure_ascii=False),
             mimetype="application/json"
         )
+
 
 
     except Exception as e:
