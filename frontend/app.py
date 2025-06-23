@@ -21,7 +21,7 @@ st.set_page_config(page_title="Hasta Verilerine Erişimde Anomali Tespiti", layo
 API_URL = "http://localhost:5000"
 
 def render_navbar(user_info):
-    col1, col2, col3, col4 = st.columns([4, 1.5, 1.5, 1])
+    col1, col2, col3, col4, col5 = st.columns([3, 1.5, 1.5, 1.5, 1])
 
     with col1:
         st.markdown(f"👤 **{user_info['username']}** ({user_info['role']})")
@@ -33,6 +33,12 @@ def render_navbar(user_info):
                 st.rerun()
 
     with col3:
+        if user_info["role"] == "admin":
+            if st.button("📥 Veri Yükle"):
+                st.session_state.page = "upload"
+                st.rerun()
+
+    with col4:
         if st.session_state.page == "results":
             if st.button("⏪ Yeni Tespit"):
                 st.session_state.page = "upload"
@@ -42,12 +48,11 @@ def render_navbar(user_info):
                 st.session_state.show_user_analysis = False
                 st.rerun()
 
-    with col4:
+    with col5:
         if st.button("🚪 Çıkış Yap"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
-
 
 
 # --- Sayfa yönetimi
