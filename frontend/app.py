@@ -78,11 +78,11 @@ elif user_info:
                     except Exception as e:
                         print(f"[Silme Hatası] {temp_path} silinemedi: {e}")
 
-            # file_path, file_content, error = save_and_forward(uploaded_file)
-            # if error:
-            #     st.error(error)
-            # else:
-            #     file_ready = True
+            file_path, file_content, error = save_and_forward(uploaded_file)
+            if error:
+                st.error(error)
+            else:
+                file_ready = True
 
 
 
