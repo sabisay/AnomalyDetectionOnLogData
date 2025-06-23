@@ -21,12 +21,18 @@ st.set_page_config(page_title="Hasta Verilerine Erişimde Anomali Tespiti", layo
 API_URL = "http://localhost:5000"
 
 def render_navbar(user_info):
-    col1, col2, col3 = st.columns([5, 1, 1])
-    
+    col1, col2, col3, col4 = st.columns([4, 1.5, 1.5, 1])
+
     with col1:
         st.markdown(f"👤 **{user_info['username']}** ({user_info['role']})")
 
     with col2:
+        if user_info["role"] == "admin":
+            if st.button("👥 Kullanıcılar"):
+                st.session_state.page = "user_mgmt"
+                st.rerun()
+
+    with col3:
         if st.session_state.page == "results":
             if st.button("⏪ Yeni Tespit"):
                 st.session_state.page = "upload"
@@ -36,11 +42,12 @@ def render_navbar(user_info):
                 st.session_state.show_user_analysis = False
                 st.rerun()
 
-    with col3:
+    with col4:
         if st.button("🚪 Çıkış Yap"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
+
 
 
 # --- Sayfa yönetimi
@@ -165,8 +172,38 @@ elif st.session_state.page == "results" and user_info:
         st.markdown(f"👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
         st.table(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
 
+# --- Sayfa: Kullanıcı Yönetimi (Admin)
+elif st.session_state.page == "user_mgmt" and user_info:
+    render_navbar(user_info)
+    st.title("👥 Kullanıcı Yönetimi")
 
-    # Role bilinmiyorsa
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    res = requests.get(f"{API_URL}/users", headers=headers)
+    if res.status_code == 200:
+        user_list = res.json()
+        st.subheader("📋 Mevcut Kullanıcılar")
+        st.table(pd.DataFrame.from_dict(user_list, orient="index"))
+
+        st.subheader("➕ Yeni Kullanıcı Ekle")
+        with st.form("add_user_form"):
+            new_user = st.text_input("Kullanıcı adı")
+            new_pass = st.text_input("Şifre", type="password")
+            new_role = "analyst"  # UI üzerinden sadece analyst eklenebilir
+            st.text_input("Rol (sabit)", value="analyst", disabled=True)
+
+            submitted = st.form_submit_button("Ekle")
+            if submitted:
+                res_add = requests.post(
+                    f"{API_URL}/users",
+                    headers=headers,
+                    json={"username": new_user, "password": new_pass, "role": new_role}
+                )
+                if res_add.status_code == 201:
+                    st.success("Kullanıcı eklendi ✅")
+                    st.rerun()
+                else:
+                    st.error(res_add.text)
     else:
-        st.error("Bu sayfa yalnızca admin ve analyst rollerine özeldir.")
+        st.error("Kullanıcılar yüklenemedi.")
+
 

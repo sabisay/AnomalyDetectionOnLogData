@@ -1,0 +1,14 @@
+{
+  "admin": {
+    "password": "$2b$12$MgMbdVMfdMG8DcKhkDbT7Oh9bWofogFy.4MNGiJaNUqzZdCwgYhCi",
+    "role": "admin"
+  },
+  "analyst": {
+    "password": "$2b$12$K0gVQIUt./xmBiWPsqEPE.Yge54rcFZLHzONUVmLALPgSDxqpXo6m",
+    "role": "analyst"
+  },
+  "damla": {
+    "password": "$2b$12$PIb7EPfkH87wmiQ9/ICVg.WxxDNsO.OlRHbBvRinz.KIIO0PFFFFC",
+    "role": "analyst"
+  }
+}

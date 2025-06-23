@@ -8,6 +8,7 @@ from auth import generate_token, login_required
 from users_db import users
 from passlib.hash import bcrypt
 from ModularizedClasses.ForDetecting.utils import abnormal_user_detector
+from users_db import users, save_users
 
 
 app = Flask(__name__)
@@ -29,7 +30,7 @@ def login():
     return jsonify({"token": token})
 
 
-
+#
 @app.route("/run-detection", methods=["POST"])
 @login_required(roles=["admin", "analyst"])
 def run_detection():
@@ -66,6 +67,40 @@ def run_detection():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+# Kullanıcı listeleme endpointi(admin yetkisi gerektirir)
+@app.route("/users", methods=["GET"])
+@login_required(roles=["admin"])
+def list_users():
+    return jsonify({u: {"role": d["role"]} for u, d in users.items()}), 200
+
+# Kullanıcı ekleme endpointi(admin yetkisi gerektirir)
+@app.route("/users", methods=["POST"])
+@login_required(roles=["admin"])
+def add_user():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
+
+    if not all([username, password, role]):
+        return jsonify({"error": "Eksik bilgi"}), 400
+    
+    if role == "admin":
+        return jsonify({"error": "Yeni admin oluşturma yetkiniz yok"}), 403
+
+    if username in users:
+        return jsonify({"error": "Kullanıcı zaten var"}), 400
+
+    users[username] = {
+        "password": bcrypt.hash(password),
+        "role": role
+    }
+    save_users(users)
+    return jsonify({"message": "Kullanıcı eklendi"}), 201
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

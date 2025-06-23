@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 
 def post_preprocess_api(df):
-    url = "http://localhost/preprocess"   # NGINX üzerinden
+    url = "http://localhost/preprocess"
     data = {"data": df.to_dict(orient="records")}
     try:
         resp = requests.post(url, json=data, timeout=20)
