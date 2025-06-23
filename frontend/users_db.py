@@ -14,10 +14,6 @@ def load_users():
             "password": bcrypt.hash("test123"),
             "role": "admin"
         },
-        "HastaneYetkilisi": {
-            "password": bcrypt.hash("test123"),
-            "role": "admin"
-        },
         "analyst": {
             "password": bcrypt.hash("test123"),
             "role": "analyst"

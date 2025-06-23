@@ -140,7 +140,7 @@ elif st.session_state.page == "results" and user_info:
     st.info("Model çalışması tamamlandı. Aşağıda sonuçlar yer almakta.")
 
     # Role: admin => detaylı analiz
-    if user_info["role"] == "admin":
+    if user_info["role"] in ["admin", "analyst"]:
         st.success("Gelişmiş analiz modu (Admin)")
 
         st.markdown(f"### 👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
@@ -167,27 +167,6 @@ elif st.session_state.page == "results" and user_info:
             st.subheader("📄 Kullanıcının Tüm Logları (Detaylı)")
             st.dataframe(user_logs)
 
-    # Role: analyst => özet analiz
-    elif user_info["role"] == "analyst":
-        st.success("📊 Anomali Tespiti Özeti (Analyst)")
-
-        st.markdown(f"👥 **Toplam {len(st.session_state.abnormals)} anormal kullanıcı** tespit edildi.")
-        st.table(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
-
-        if "summary" in st.session_state:
-            summary = st.session_state["summary"]
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("📦 Toplam", summary["total"])
-            with col2:
-                st.metric("✅ Normal", summary["normal"])
-            with col3:
-                st.metric("⚠️ Anomali", summary["anomalies"])
-
-            st.metric("📈 Ortalama Hata", f"{summary['mean_error']:.6f}")
-
-            st.markdown("### 📅 Anomali Detayları")
-            st.table(pd.DataFrame(summary["details"]))
 
 
 # --- Sayfa: Kullanıcı Yönetimi (Admin)
