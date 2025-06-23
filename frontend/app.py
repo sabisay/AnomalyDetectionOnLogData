@@ -6,8 +6,9 @@ from data_loader import load_data, save_and_forward
 from dashboard import show_general_dashboard
 from user_analysis import (
     show_user_logs,
-
     plot_user_hour_distribution,
+    plot_access_level_distribution,
+    plot_department_distribution,
     show_sensitive_accesses
 )
 
@@ -145,6 +146,13 @@ elif st.session_state.page == "results" and user_info:
         if st.session_state.df is not None:
             user_logs = show_user_logs(st.session_state.df, selected)
             plot_user_hour_distribution(user_logs)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### 📊 Eriişim Türü Dağılımı")
+                plot_access_level_distribution(user_logs)
+            with col2:
+                st.markdown("### 🏢 Departman Dağılımı")
+                plot_department_distribution(user_logs)
             show_sensitive_accesses(user_logs)
 
             st.markdown("---")

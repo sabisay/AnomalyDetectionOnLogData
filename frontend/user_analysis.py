@@ -76,6 +76,29 @@ def plot_user_hour_distribution(user_logs):
                      labels={"Hour": "Saat"}, height=300)
     st.plotly_chart(fig, use_container_width=True)
 
+def plot_access_level_distribution(user_logs):
+    if "AccessLevel" not in user_logs.columns:
+        st.info("Bu veride 'AccessLevel' kolonu yok.")
+        return
+
+    counts = user_logs["AccessLevel"].dropna().astype(str).str.lower().value_counts().reset_index()
+    counts.columns = ["Erişim Türü", "Sayı"]
+
+    fig = px.bar(counts, x="Erişim Türü", y="Sayı", title="📊 AccessLevel Dağılımı", text="Sayı")
+    st.plotly_chart(fig, use_container_width=True)
+
+def plot_department_distribution(user_logs):
+    if "Department" not in user_logs.columns:
+        st.info("Bu veride 'Department' kolonu yok.")
+        return
+
+    counts = user_logs["Department"].dropna().astype(str).value_counts().reset_index()
+    counts.columns = ["Departman", "Erişim Sayısı"]
+
+    fig = px.bar(counts, x="Departman", y="Erişim Sayısı", title="🏢 Kullanıcının Eriştiği Departmanlar", text="Erişim Sayısı")
+    st.plotly_chart(fig, use_container_width=True)
+
+
 def show_sensitive_accesses(user_logs):
     if "IsSensitive" not in user_logs.columns:
         st.info("Bu veride 'IsSensitive' kolonu yok.")
