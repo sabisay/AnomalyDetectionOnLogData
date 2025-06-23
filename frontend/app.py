@@ -6,9 +6,8 @@ from data_loader import load_data, save_and_forward
 from dashboard import show_general_dashboard
 from user_analysis import (
     show_user_logs,
-    plot_user_access_timeline,
+
     plot_user_hour_distribution,
-    plot_user_temporal_heatmap,
     show_sensitive_accesses
 )
 
@@ -109,19 +108,20 @@ elif st.session_state.page == "upload" and user_info:
             if error:
                 st.error(error)
             else:
-                if st.button("🚀 Anomali Tespitini Başlat"):
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                    with st.spinner("Model çalıştırılıyor..."):
-                        res = requests.post(f"{API_URL}/run-detection", files={"file": uploaded_file}, headers=headers)
-                    if res.status_code == 200:
-                        result = res.json()
-                        st.session_state.abnormals = result["abnormal_users"]
-                        st.session_state.df = df
-                        st.session_state.selected_user = st.session_state.abnormals[0]
-                        st.session_state.page = "results"
-                        st.rerun()
-                    else:
-                        st.error(f"❌ Hata: {res.text}")
+                if user_info["role"] in ["admin", "analyst"]:    
+                    if st.button("🚀 Anomali Tespitini Başlat"):
+                        headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                        with st.spinner("Model çalıştırılıyor..."):
+                            res = requests.post(f"{API_URL}/run-detection", files={"file": uploaded_file}, headers=headers)
+                        if res.status_code == 200:
+                            result = res.json()
+                            st.session_state.abnormals = result["abnormal_users"]
+                            st.session_state.df = df
+                            st.session_state.selected_user = st.session_state.abnormals[0]
+                            st.session_state.page = "results"
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Hata: {res.text}")
 
 
 # --- Sayfa: Sonuçlar ve Analiz
@@ -134,6 +134,9 @@ elif st.session_state.page == "results" and user_info:
     if user_info["role"] == "admin":
         st.success("Gelişmiş analiz modu (Admin)")
 
+        st.markdown(f"### 👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
+        st.dataframe(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
+
         st.markdown(f"📌 İncelenen kullanıcı: `{st.session_state.selected_user}`")
         selected = st.selectbox("Başka bir kullanıcı seçin:", st.session_state.abnormals,
                                 index=st.session_state.abnormals.index(st.session_state.selected_user))
@@ -141,9 +144,7 @@ elif st.session_state.page == "results" and user_info:
 
         if st.session_state.df is not None:
             user_logs = show_user_logs(st.session_state.df, selected)
-            plot_user_access_timeline(user_logs)
             plot_user_hour_distribution(user_logs)
-            plot_user_temporal_heatmap(user_logs)
             show_sensitive_accesses(user_logs)
 
             st.markdown("---")
