@@ -4,31 +4,67 @@ import pandas as pd
 import requests
 from data_loader import load_data, save_and_forward
 from dashboard import show_general_dashboard
+from user_analysis import (
+    show_user_logs,
+    plot_user_access_timeline,
+    plot_user_hour_distribution,
+    plot_user_temporal_heatmap,
+    show_sensitive_accesses
+)
+
 
 import jwt
 import time
 
-uploaded_file = None  # Global variable to hold the uploaded file
-API_URL = "http://localhost:5000"  # Flask API URL
+st.set_page_config(page_title="Hasta Verilerine Erişimde Anomali Tespiti", layout="wide")
 
-st.set_page_config(page_title="Anomali Tespit Arayüzü", layout="wide")
-st.title("📊 Anomali Tespit Uygulaması")
+API_URL = "http://localhost:5000"
 
-# Session kontrolü
+def render_navbar(user_info):
+    col1, col2, col3 = st.columns([5, 1, 1])
+    
+    with col1:
+        st.markdown(f"👤 **{user_info['username']}** ({user_info['role']})")
+
+    with col2:
+        if st.session_state.page == "results":
+            if st.button("⏪ Yeni Tespit"):
+                st.session_state.page = "upload"
+                st.session_state.df = None
+                st.session_state.abnormals = []
+                st.session_state.selected_user = None
+                st.session_state.show_user_analysis = False
+                st.rerun()
+
+    with col3:
+        if st.button("🚪 Çıkış Yap"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+
+# --- Sayfa yönetimi
+if "page" not in st.session_state:
+    st.session_state.page = "upload"
+if "df" not in st.session_state:
+    st.session_state.df = None
+if "abnormals" not in st.session_state:
+    st.session_state.abnormals = []
+if "selected_user" not in st.session_state:
+    st.session_state.selected_user = None
+
+# --- Kimlik kontrolü
 if "token" not in st.session_state:
     st.session_state.token = None
 
-# Token çözümlemesi
 user_info = None
 if st.session_state.token:
     try:
         user_info = jwt.decode(st.session_state.token, options={"verify_signature": False})
-        st.success(f"Giriş başarılı! Hoş geldin {user_info['username']} ({user_info['role']})")
     except Exception:
         st.session_state.token = None
-        st.warning("Geçersiz token, tekrar giriş yapın.")
+        st.warning("Geçersiz token.")
 
-# Giriş ekranı
 if not st.session_state.token:
     with st.form("login_form"):
         st.subheader("🔐 Giriş Yap")
@@ -44,32 +80,23 @@ if not st.session_state.token:
                 time.sleep(1)
                 st.rerun()
             else:
-                st.error("Giriş başarısız. Lütfen bilgileri kontrol edin.")
+                st.error("Giriş başarısız.")
 
-# Giriş başarılıysa arayüz
-elif user_info:
+# --- Sayfa: Veri Yükleme ve Tespit
 
-    role = user_info["role"]
+elif st.session_state.page == "upload" and user_info:
+    render_navbar(user_info)
+    st.title("📥 Veri Yükleme & Anomali Tespiti")
+    uploaded_file = st.file_uploader("Verinizi yükleyin:", type=["csv", "xlsx"])
 
-    st.sidebar.subheader("👤 Oturum")
-    if st.sidebar.button("🚪 Çıkış Yap"):
-        st.session_state.token = None
-        st.rerun()
-
-    uploaded_file = st.file_uploader("Veri dosyasını yükleyin (.csv, .xlsx):", type=["csv", "xlsx"])
-    df = None
-    file_ready = False
     if uploaded_file:
         df, error = load_data(uploaded_file)
         if error:
             st.error(error)
-            file_ready = False
         else:
             st.success("Veri başarıyla yüklendi ✅")
             show_general_dashboard(df)
-            st.markdown("---")
-        
-            #Eski geçici dosyaları temizle
+
             for ext in [".csv", ".xlsx"]:
                 temp_path = os.path.abspath(f"temp_uploaded{ext}")
                 if os.path.exists(temp_path):
@@ -78,38 +105,59 @@ elif user_info:
                     except Exception as e:
                         print(f"[Silme Hatası] {temp_path} silinemedi: {e}")
 
-            file_path, file_content, error = save_and_forward(uploaded_file)
+            file_path, _, error = save_and_forward(uploaded_file)
             if error:
                 st.error(error)
             else:
-                file_ready = True
+                if st.button("🚀 Anomali Tespitini Başlat"):
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    with st.spinner("Model çalıştırılıyor..."):
+                        res = requests.post(f"{API_URL}/run-detection", files={"file": uploaded_file}, headers=headers)
+                    if res.status_code == 200:
+                        result = res.json()
+                        st.session_state.abnormals = result["abnormal_users"]
+                        st.session_state.df = df
+                        st.session_state.selected_user = st.session_state.abnormals[0]
+                        st.session_state.page = "results"
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Hata: {res.text}")
 
 
+# --- Sayfa: Sonuçlar ve Analiz
+elif st.session_state.page == "results" and user_info:
+    render_navbar(user_info)
+    st.title("🔎 Anomali Tespiti Sonuçları")
+    st.info("Model çalışması tamamlandı. Aşağıda sonuçlar yer almakta.")
 
-if role in ["admin", "analyst"] and file_ready and uploaded_file:
-    if st.button("🚀 Anomali Tespitini Başlat"):
-        if uploaded_file:
+    # Role: admin => detaylı analiz
+    if user_info["role"] == "admin":
+        st.success("Gelişmiş analiz modu (Admin)")
 
-            file_path, file_content, error = save_and_forward(uploaded_file)
-            if error:
-                st.error(error)
-                st.stop()
+        st.markdown(f"📌 İncelenen kullanıcı: `{st.session_state.selected_user}`")
+        selected = st.selectbox("Başka bir kullanıcı seçin:", st.session_state.abnormals,
+                                index=st.session_state.abnormals.index(st.session_state.selected_user))
+        st.session_state.selected_user = selected
 
-            with st.spinner("Model çalıştırılıyor..."):
-                headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                res = requests.post(
-                    f"{API_URL}/run-detection",
-                    files={"file": uploaded_file},
-                    headers=headers
-                )
-                
-            if res.status_code == 200:
-                result = res.json()
-                st.success("✅ Anormal kullanıcılar başarıyla tespit edildi.")
-                st.dataframe(pd.DataFrame({"Abnormal Users": result["abnormal_users"]}))
+        if st.session_state.df is not None:
+            user_logs = show_user_logs(st.session_state.df, selected)
+            plot_user_access_timeline(user_logs)
+            plot_user_hour_distribution(user_logs)
+            plot_user_temporal_heatmap(user_logs)
+            show_sensitive_accesses(user_logs)
 
-                abnormals = result["abnormal_users"]
+            st.markdown("---")
+            st.subheader("📄 Kullanıcının Tüm Logları (Detaylı)")
+            st.dataframe(user_logs)
+
+    # Role: analyst => sadece liste
+    elif user_info["role"] == "analyst":
+        st.warning("Bu sayfa yalnızca kullanıcı listesini gösterir (Analyst)")
+        st.markdown(f"👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
+        st.table(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
 
 
-            else:
-                st.error(f"❌ Hata oluştu: {res.text}")
+    # Role bilinmiyorsa
+    else:
+        st.error("Bu sayfa yalnızca admin ve analyst rollerine özeldir.")
+
