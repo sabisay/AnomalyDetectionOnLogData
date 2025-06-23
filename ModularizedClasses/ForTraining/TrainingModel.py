@@ -12,9 +12,6 @@ from keras.layers import LSTM, RepeatVector, TimeDistributed
 
 import matplotlib.pyplot as plt
 
-ModelPath = "ModularizedClasses/ForTraining/"
-DataPath = "ModularizedClasses/ForTraining/behaviours/"
-
 # Build Autoencoder
 def set_seed(seed=42):
     np.random.seed(seed)

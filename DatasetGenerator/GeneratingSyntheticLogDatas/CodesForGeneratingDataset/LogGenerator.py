@@ -4,11 +4,11 @@ from datetime import datetime, timedelta
 import random
 
 # Sabitler
-NUM_RECORDS = 200000
-NUM_USERS = 200  # Personel sayısı
-NUM_PATIENTS = 20000  # Hasta sayısı
+NUM_RECORDS = 270000
+NUM_USERS = 300  # Personel sayısı
+NUM_PATIENTS = 45000  # Hasta sayısı
 NUM_DEPARTMENTS = 10  # Departman sayısı
-NUM_DEVICES = 200  # Cihaz sayısı
+NUM_DEVICES = 300  # Cihaz sayısı
 USER_ROLES = ["Doctor", "Nurse", "Secretary", "Admin", "Researcher"]
 ACCESS_LEVELS = ["read", "write", "modify", "delete"]
 
@@ -23,11 +23,11 @@ user_departments = {f"USR_{str(user_id).zfill(3)}": random.randint(1, NUM_DEPART
 # Kullanıcı rollerini özel dağılımla belirleme
 user_roles = {}
 user_distribution = {
-    "Doctor": 50,
-    "Nurse": 80,
-    "Secretary": 30,
-    "Admin": 10,
-    "Researcher": 30
+    "Doctor": 75,
+    "Nurse": 120,
+    "Secretary": 50,
+    "Admin": 20,
+    "Researcher": 35
 }
 user_id_counter = 1
 for role, count in user_distribution.items():
@@ -42,7 +42,7 @@ patient_departments = {f"PTN_{str(patient_id).zfill(5)}": random.randint(1, NUM_
 # Veri kümesini oluştur
 records = []
 start_time = datetime(2024, 1, 1, 9, 0, 0)  # 9 AM başlangıç
-end_time = start_time + timedelta(days=3)  # 3 gün
+end_time = start_time + timedelta(days=5)  # 3 gün
 
 for i in range(NUM_RECORDS):
     log_id = i + 1  # ID sütunu ekleme
@@ -51,7 +51,7 @@ for i in range(NUM_RECORDS):
     role = user_roles[user_id]
     
     # 9 AM - 6 PM aralığında rastgele zaman üretme
-    random_day = random.randint(0, 3)  # 3 günlük periyot
+    random_day = random.randint(0, 5)  # 3 günlük periyot
     random_hour = random.randint(9, 17)  # 9AM - 6PM
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
