@@ -6,24 +6,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, f1_score, classification_report
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 
 def get_data(file_path, output_path=None):
     ext = os.path.splitext(file_path)[1].lower()
 
     if ext == ".csv":
+        # İlk 1KB’lık kısmı alıp ayırıcıyı tespit et
+        with open(file_path, 'r', encoding='utf-8') as f:
+            sample = f.read(1024)
+            try:
+                dialect = csv.Sniffer().sniff(sample)
+                sep = dialect.delimiter
+            except csv.Error:
+                sep = ','  # fallback
+
         try:
-            # İlk 1KB’lık kısmı alıp ayırıcıyı tespit et
-            with open(file_path, 'r', encoding='utf-8') as f:
-                sample = f.read(1024)
-                try:
-                    dialect = csv.Sniffer().sniff(sample)
-                    sep = dialect.delimiter
-                except csv.Error:
-                    sep = ','  # fallback
-
             df = pd.read_csv(file_path, encoding="utf-8", sep=sep)
-
         except UnicodeDecodeError:
             df = pd.read_csv(file_path, encoding="ISO-8859-9", sep=sep)
 
@@ -212,13 +211,19 @@ def set_detected_abnormalUsers(df, predictions, label="Test"):
 
 def print_results_generalized(total, normal, anomalies, reconstruction_error):
     print("\n" + "="*50)
-    print("🔍 ANOMALY DETECTION RESULTS BY LSTM AUTOENCODER")
+    print("🔍 ANOMALY DETECTION RESULTS BY AUTOENCODER")
     print("="*50)
     print(f"📊 Total Sequences: {total}")
     print(f"✅ Normal: {normal} ({(normal/total)*100:.2f}%)")
     print(f"⚠️ Anomalies: {anomalies} ({(anomalies/total)*100:.2f}%)")
     print(f"📈 Average Error: {np.mean(reconstruction_error):.6f}")
     print("="*50 + "\n")
+    
+def create_windows(data, window_size):
+    windows = []
+    for i in range(len(data) - window_size + 1):
+        windows.append(data[i:i + window_size])
+    return np.array(windows)
     
 ##### THIS IS THE METHOD LOADS FILE AND PREPROCESSES IT #####
 def load_and_preprocess(input_path, output_parquet=None):
@@ -241,7 +246,7 @@ def behavior_analysis(df):
     return scaled_matrix, session_vectors
     
 ##### THIS METHOD DETECTS ABNORMAL USERS #####
-def model_runner(model, scaled_df, session_vectors, threshold=0.452005):
+def model_runner(model, scaled_df, session_vectors, threshold=0.452005, window_size=1):
     """
     Detect abnormal users using a trained autoencoder (LSTM or standard).
     Args:
@@ -262,9 +267,13 @@ def model_runner(model, scaled_df, session_vectors, threshold=0.452005):
         raise ValueError(f"Missing features. Required: {expected_features}")
     data = scaled_df[expected_features].values.astype('float32')
     input_shape = model.input_shape
+    
     if len(input_shape) == 3:
-        print("LSTM model detected - reshaping to 3D")
-        data = np.reshape(data, (data.shape[0], 1, data.shape[1]))
+        print("LSTM model detected - windowing data")
+        if window_size > 1:
+            data = create_windows(data, window_size)
+        else:
+            data = np.reshape(data, (data.shape[0], 1, data.shape[1]))
     else:
         print("Standard autoencoder detected - using 2D shape")
     print(f"Input data shape after reshape: {data.shape}")
@@ -361,8 +370,8 @@ def evaluate_model_performance(Label, DetectedAbnormal):
     
     # Plot confusion matrix
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title('Confusion Matrix')
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', annot_kws={"size": 18})
+    plt.title('Confusion Matrix of LSTM Autoencoder Model')
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
     plt.show()
