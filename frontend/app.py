@@ -6,9 +6,9 @@ from data_loader import load_data, save_and_forward
 from dashboard import show_general_dashboard
 from user_analysis import (
     show_user_logs,
-    plot_user_access_timeline,
     plot_user_hour_distribution,
-    plot_user_temporal_heatmap,
+    plot_access_level_distribution,
+    plot_department_distribution,
     show_sensitive_accesses
 )
 
@@ -21,12 +21,24 @@ st.set_page_config(page_title="Hasta Verilerine Erişimde Anomali Tespiti", layo
 API_URL = "http://localhost:5000"
 
 def render_navbar(user_info):
-    col1, col2, col3 = st.columns([5, 1, 1])
-    
+    col1, col2, col3, col4, col5 = st.columns([3, 1.5, 1.5, 1.5, 1])
+
     with col1:
         st.markdown(f"👤 **{user_info['username']}** ({user_info['role']})")
 
     with col2:
+        if user_info["role"] == "admin":
+            if st.button("👥 Kullanıcılar"):
+                st.session_state.page = "user_mgmt"
+                st.rerun()
+
+    with col3:
+        if user_info["role"] == "admin":
+            if st.button("📥 Veri Yükle"):
+                st.session_state.page = "upload"
+                st.rerun()
+
+    with col4:
         if st.session_state.page == "results":
             if st.button("⏪ Yeni Tespit"):
                 st.session_state.page = "upload"
@@ -36,7 +48,7 @@ def render_navbar(user_info):
                 st.session_state.show_user_analysis = False
                 st.rerun()
 
-    with col3:
+    with col5:
         if st.button("🚪 Çıkış Yap"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
@@ -109,19 +121,21 @@ elif st.session_state.page == "upload" and user_info:
             if error:
                 st.error(error)
             else:
-                if st.button("🚀 Anomali Tespitini Başlat"):
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                    with st.spinner("Model çalıştırılıyor..."):
-                        res = requests.post(f"{API_URL}/run-detection", files={"file": uploaded_file}, headers=headers)
-                    if res.status_code == 200:
-                        result = res.json()
-                        st.session_state.abnormals = result["abnormal_users"]
-                        st.session_state.df = df
-                        st.session_state.selected_user = st.session_state.abnormals[0]
-                        st.session_state.page = "results"
-                        st.rerun()
-                    else:
-                        st.error(f"❌ Hata: {res.text}")
+                if user_info["role"] in ["admin", "analyst"]:    
+                    if st.button("🚀 Anomali Tespitini Başlat"):
+                        headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                        with st.spinner("Model çalıştırılıyor..."):
+                            res = requests.post(f"{API_URL}/run-detection", files={"file": uploaded_file}, headers=headers)
+                        if res.status_code == 200:
+                            result = res.json()
+                            st.session_state.abnormals = result["abnormal_users"]
+                            st.session_state.summary = result.get("summary", {})
+                            st.session_state.df = df
+                            st.session_state.selected_user = st.session_state.abnormals[0]
+                            st.session_state.page = "results"
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Hata: {res.text}")
 
 
 # --- Sayfa: Sonuçlar ve Analiz
@@ -131,8 +145,11 @@ elif st.session_state.page == "results" and user_info:
     st.info("Model çalışması tamamlandı. Aşağıda sonuçlar yer almakta.")
 
     # Role: admin => detaylı analiz
-    if user_info["role"] == "admin":
+    if user_info["role"] in ["admin", "analyst"]:
         st.success("Gelişmiş analiz modu (Admin)")
+
+        st.markdown(f"### 👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
+        st.dataframe(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
 
         st.markdown(f"📌 İncelenen kullanıcı: `{st.session_state.selected_user}`")
         selected = st.selectbox("Başka bir kullanıcı seçin:", st.session_state.abnormals,
@@ -141,23 +158,54 @@ elif st.session_state.page == "results" and user_info:
 
         if st.session_state.df is not None:
             user_logs = show_user_logs(st.session_state.df, selected)
-            plot_user_access_timeline(user_logs)
             plot_user_hour_distribution(user_logs)
-            plot_user_temporal_heatmap(user_logs)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("### 📊 Eriişim Türü Dağılımı")
+                plot_access_level_distribution(user_logs)
+            with col2:
+                st.markdown("### 🏢 Departman Dağılımı")
+                plot_department_distribution(user_logs)
             show_sensitive_accesses(user_logs)
 
             st.markdown("---")
             st.subheader("📄 Kullanıcının Tüm Logları (Detaylı)")
             st.dataframe(user_logs)
 
-    # Role: analyst => sadece liste
-    elif user_info["role"] == "analyst":
-        st.warning("Bu sayfa yalnızca kullanıcı listesini gösterir (Analyst)")
-        st.markdown(f"👥 Toplam {len(st.session_state.abnormals)} anormal kullanıcı tespit edildi.")
-        st.table(pd.DataFrame(st.session_state.abnormals, columns=["Anormal Kullanıcılar"]))
 
 
-    # Role bilinmiyorsa
+# --- Sayfa: Kullanıcı Yönetimi (Admin)
+elif st.session_state.page == "user_mgmt" and user_info:
+    render_navbar(user_info)
+    st.title("👥 Kullanıcı Yönetimi")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    res = requests.get(f"{API_URL}/users", headers=headers)
+    if res.status_code == 200:
+        user_list = res.json()
+        st.subheader("📋 Mevcut Kullanıcılar")
+        st.table(pd.DataFrame.from_dict(user_list, orient="index"))
+
+        st.subheader("➕ Yeni Kullanıcı Ekle")
+        with st.form("add_user_form"):
+            new_user = st.text_input("Kullanıcı adı")
+            new_pass = st.text_input("Şifre", type="password")
+            new_role = "analyst"  # UI üzerinden sadece analyst eklenebilir
+            st.text_input("Rol (sabit)", value="analyst", disabled=True)
+
+            submitted = st.form_submit_button("Ekle")
+            if submitted:
+                res_add = requests.post(
+                    f"{API_URL}/users",
+                    headers=headers,
+                    json={"username": new_user, "password": new_pass, "role": new_role}
+                )
+                if res_add.status_code == 201:
+                    st.success("Kullanıcı eklendi ✅")
+                    st.rerun()
+                else:
+                    st.error(res_add.text)
     else:
-        st.error("Bu sayfa yalnızca admin ve analyst rollerine özeldir.")
+        st.error("Kullanıcılar yüklenemedi.")
+
 

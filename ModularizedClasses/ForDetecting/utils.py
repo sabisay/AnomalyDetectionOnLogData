@@ -319,7 +319,7 @@ def abnormal_user_detector(
     for i, user in enumerate(abnormal_users, 1):
         print(f"{i}. {user}")
     
-    return abnormal_users
+    return abnormal_users,session_vectors, test_pred, reconstruction_error, total, normal, anomalies
 
 
 
