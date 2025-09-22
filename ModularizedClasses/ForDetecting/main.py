@@ -1,48 +1,47 @@
-import os
-import numpy as np
+import pandas as pd
+from Preprocessing import process_all
+from BehaviourAnalysis import behaviour_analysis
+from TestingModel import DetectAbnormalBehaviour
 from keras.models import load_model
-from utils import abnormal_user_detector, create_comparison_df, evaluate_model_performance
+from Evaluation import create_comparison_df, evaluate_model_performance
+#from SecondPhase import explain_anomalies
 
-possible_extensions = [".csv", ".xlsx"]
-input_path = None
-for ext in possible_extensions:
-    candidate = f"DatasetGenerator/GeneratingSyntheticLogDatas/TrdTry/Test/Test{ext}"
-    if os.path.exists(candidate):
-        input_path = candidate
-        break
+input = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test.csv"
+Model = r"ModularizedClasses\Model\autoencoder_model.keras"
+Label = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test_AnomalousUsers.txt"
 
-if input_path is None:
-    raise FileNotFoundError("No input file found (expected temp_uploaded.csv or temp_uploaded.xlsx)")
+outputPath = r"ModularizedClasses\ForDetecting\outputs"
+behaviourPath = r"ModularizedClasses\ForDetecting\behaviours"
+userPath = r"ModularizedClasses\ForDetecting\users"
 
-model_path = r"ModularizedClasses\Model\lstm_autoencoder_model.keras"
-output_parquet = r"ModularizedClasses\ForDetecting\outputs\Test_processed.parquet"
-threshold = 0.452005
+Threshold = 0.452005
 
 if __name__ == "__main__":
-    # Modeli yükle
-    model = load_model(model_path)
-
-    # Pipeline'ı çalıştır ve anormal kullanıcıları al
-    abnormal_users = abnormal_user_detector(
-        input_path=input_path,
-        model=model,
-        output_parquet=output_parquet,
-        threshold=threshold
+    process_all(input, outputPath)
+    behaviour_analysis(outputPath, behaviourPath, userPath)
+    
+    # Load the model
+    autoencod = load_model(Model)
+    
+    predictions, errors, abnormal_users = DetectAbnormalBehaviour(
+        model_predictor = autoencod,
+        threshold_num=Threshold,
+        data_path= behaviourPath + r"\Test_processed.parquet",
+        raw_df_path= userPath + r"\Test_processed_raw.parquet"
     )
-
-    # Sonuçları yazdır
+    
+    # Get true labels from file
+    # Remove duplicates from abnormal_users
+    abnormal_users = list(set(abnormal_users))
+    # Debug print
     print("\nDetected Abnormal Users:")
     print(f"Total count: {len(abnormal_users)}")
     for i, user in enumerate(abnormal_users, 1):
         print(f"{i}. {user}")
-        
-     # Gerçek anomali kullanıcılarını oku
-    label_path = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test_AnomalousUsers.txt"
-    with open(label_path, 'r') as f:
+    y_true = []
+    with open(Label, 'r') as f:
         y_true = [line.strip() for line in f]
-
-    # Karşılaştırma DataFrame'i oluştur
+        
     comparison_df = create_comparison_df(y_true, abnormal_users)
-
-    # Performans değerlendirmesi ve confusion matrix görselleştirmesi
-    f1, cm = evaluate_model_performance(comparison_df['Label'], comparison_df['DetectedAbnormal'])
+    evaluate_model_performance( comparison_df['Label'], comparison_df['DetectedAbnormal'])
+    
