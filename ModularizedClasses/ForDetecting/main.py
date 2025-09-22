@@ -4,7 +4,7 @@ from BehaviourAnalysis import behaviour_analysis
 from TestingModel import DetectAbnormalBehaviour
 from keras.models import load_model
 from Evaluation import create_comparison_df, evaluate_model_performance
-from SecondPhase import explain_anomalies
+#from SecondPhase import explain_anomalies
 
 input = r"DatasetGenerator\GeneratingSyntheticLogDatas\TrdTry\Test\Test.csv"
 Model = r"ModularizedClasses\Model\autoencoder_model.keras"
